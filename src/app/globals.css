@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f5f7;
+  --foreground: #101828;
+  --surface: #ffffff;
+  --border: #e2e5ea;
+
+  --primary: #14406b;
+  --primary-dark: #0c2c4a;
+  --emergency: #d92d20;
+  --emergency-dark: #b42318;
+  --warning: #dc6803;
+  --success: #067647;
+  --muted: #667085;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-emergency: var(--emergency);
+  --color-emergency-dark: var(--emergency-dark);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-inter);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  font-family: inherit;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}

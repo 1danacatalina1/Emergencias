@@ -1,0 +1,366 @@
+// Sistema de Gestión de Emergencias — esquema de base de datos
+// Prisma ORM 7 + PostgreSQL
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Autenticación / usuarios del panel de gestión
+// ---------------------------------------------------------------------------
+
+enum RolUsuario {
+  ADMIN
+  COORDINADOR
+  OPERADOR
+  CONSULTA
+}
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  role         RolUsuario @default(OPERADOR)
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  incidentsCreated   Incident[]   @relation("IncidentCreatedBy")
+  incidentsUpdated   Incident[]   @relation("IncidentUpdatedBy")
+  personsCreated     Person[]     @relation("PersonCreatedBy")
+  transfersCreated   Transfer[]   @relation("TransferCreatedBy")
+  aidRequestsCreated AidRequest[] @relation("AidRequestCreatedBy")
+  aidRequestsUpdated AidRequest[] @relation("AidRequestUpdatedBy")
+  auditLogs          AuditLog[]
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Catálogo configurable de tipos de incidente
+// ---------------------------------------------------------------------------
+
+model IncidentType {
+  id       String     @id @default(cuid())
+  nombre   String     @unique
+  slug     String     @unique
+  activo   Boolean    @default(true)
+  orden    Int        @default(0)
+
+  incidents Incident[]
+
+  @@map("incident_types")
+}
+
+// ---------------------------------------------------------------------------
+// Enumeraciones compartidas
+// ---------------------------------------------------------------------------
+
+enum NivelPrioridad {
+  BAJA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+enum EstadoIncidente {
+  REPORTADO
+  EN_ATENCION
+  EN_PROCESO
+  RESUELTO
+  CERRADO
+  DESCARTADO
+}
+
+enum TipoDocumento {
+  CC
+  TI
+  CE
+  PASAPORTE
+  RC
+  NUIP
+  SIN_DOCUMENTO
+}
+
+enum Sexo {
+  MASCULINO
+  FEMENINO
+  OTRO
+  NO_INFORMA
+}
+
+enum EstadoPersona {
+  DESAPARECIDA
+  BUSQUEDA
+  LOCALIZADA
+  ILESA
+  HERIDA
+  ATRAPADA
+  TRASLADADA
+  FALLECIDA
+  ATENDIDA
+}
+
+enum TipoTraslado {
+  AMBULANCIA
+  VEHICULO_PARTICULAR
+  HELICOPTERO
+  A_PIE
+  OTRO
+}
+
+enum EstadoTraslado {
+  SOLICITADO
+  EN_RUTA
+  TRASLADADO
+  ATENDIDO_EN_CENTRO
+  CANCELADO
+}
+
+enum TipoAyuda {
+  ALIMENTOS
+  AGUA
+  REFUGIO_ALOJAMIENTO
+  MEDICAMENTOS
+  ATENCION_MEDICA
+  ROPA_ABRIGO
+  RESCATE
+  ELEMENTOS_ASEO
+  OTRO
+}
+
+enum EstadoAyuda {
+  SOLICITADA
+  EN_PROCESO
+  ENTREGADA
+  CANCELADA
+}
+
+enum AccionAuditoria {
+  CREAR
+  ACTUALIZAR
+  ELIMINAR
+  LOGIN
+}
+
+// ---------------------------------------------------------------------------
+// Incidentes / emergencias
+// ---------------------------------------------------------------------------
+
+model Incident {
+  id                 String          @id @default(cuid())
+  codigo             String          @unique
+
+  incidentTypeId     String
+  incidentType       IncidentType    @relation(fields: [incidentTypeId], references: [id])
+  subtipo            String?
+  descripcion        String
+
+  direccion          String
+  municipio          String
+  departamento       String
+  latitud            Float
+  longitud           Float
+  precisionUbicacion Float?
+
+  nivelPrioridad     NivelPrioridad  @default(MEDIA)
+  estado             EstadoIncidente @default(REPORTADO)
+
+  fechaEvento        DateTime        @default(now())
+  fechaReporte       DateTime        @default(now())
+
+  reporteroNombre    String?
+  reporteroTelefono  String?
+  esAnonimo          Boolean         @default(false)
+
+  creadoPorId        String?
+  creadoPor          User?           @relation("IncidentCreatedBy", fields: [creadoPorId], references: [id])
+  actualizadoPorId   String?
+  actualizadoPor     User?           @relation("IncidentUpdatedBy", fields: [actualizadoPorId], references: [id])
+
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  personas           Person[]
+  traslados          Transfer[]
+  ayudas             AidRequest[]
+  adjuntos           Attachment[]
+
+  @@index([estado])
+  @@index([nivelPrioridad])
+  @@index([municipio])
+  @@index([incidentTypeId])
+  @@map("incidents")
+}
+
+// ---------------------------------------------------------------------------
+// Personas afectadas
+// ---------------------------------------------------------------------------
+
+model Person {
+  id                String        @id @default(cuid())
+
+  incidentId        String
+  incident          Incident      @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  nombreCompleto    String
+  tipoDocumento     TipoDocumento @default(SIN_DOCUMENTO)
+  numeroDocumento   String?
+  fechaNacimiento   DateTime?
+  edad              Int?
+  sexo              Sexo          @default(NO_INFORMA)
+  telefono          String?
+
+  estadoPersona     EstadoPersona @default(DESAPARECIDA)
+  condicionSalud    String?
+  direccionResidencia String?
+
+  contactoNombre    String?
+  contactoTelefono  String?
+  contactoParentesco String?
+
+  observaciones     String?
+
+  creadoPorId       String?
+  creadoPor         User?         @relation("PersonCreatedBy", fields: [creadoPorId], references: [id])
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  traslados         Transfer[]
+
+  @@index([incidentId])
+  @@index([estadoPersona])
+  @@index([numeroDocumento])
+  @@map("persons")
+}
+
+// ---------------------------------------------------------------------------
+// Traslados a centros médicos
+// ---------------------------------------------------------------------------
+
+model Transfer {
+  id               String         @id @default(cuid())
+
+  personId         String
+  person           Person         @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  incidentId       String?
+  incident         Incident?      @relation(fields: [incidentId], references: [id])
+
+  centroMedico     String
+  tipoTraslado     TipoTraslado   @default(AMBULANCIA)
+  motivo           String
+  estadoTraslado   EstadoTraslado @default(SOLICITADO)
+
+  fechaTraslado    DateTime       @default(now())
+  vehiculoPlaca    String?
+  responsable      String?
+  observaciones    String?
+
+  creadoPorId      String?
+  creadoPor        User?          @relation("TransferCreatedBy", fields: [creadoPorId], references: [id])
+
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([personId])
+  @@index([incidentId])
+  @@index([estadoTraslado])
+  @@map("transfers")
+}
+
+// ---------------------------------------------------------------------------
+// Solicitudes de ayuda humanitaria
+// ---------------------------------------------------------------------------
+
+model AidRequest {
+  id                 String         @id @default(cuid())
+  codigo             String         @unique
+
+  incidentId         String?
+  incident           Incident?      @relation(fields: [incidentId], references: [id])
+
+  nombreSolicitante  String
+  telefonoSolicitante String
+  tipoAyuda          TipoAyuda      @default(OTRO)
+  descripcion        String
+  cantidadPersonas   Int            @default(1)
+
+  direccion          String
+  municipio          String
+  departamento       String
+  latitud            Float?
+  longitud           Float?
+
+  prioridad          NivelPrioridad @default(MEDIA)
+  estado             EstadoAyuda    @default(SOLICITADA)
+
+  creadoPorId        String?
+  creadoPor          User?          @relation("AidRequestCreatedBy", fields: [creadoPorId], references: [id])
+  actualizadoPorId   String?
+  actualizadoPor     User?          @relation("AidRequestUpdatedBy", fields: [actualizadoPorId], references: [id])
+
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([estado])
+  @@index([tipoAyuda])
+  @@index([municipio])
+  @@map("aid_requests")
+}
+
+// ---------------------------------------------------------------------------
+// Adjuntos (fotos de incidentes)
+// ---------------------------------------------------------------------------
+
+model Attachment {
+  id         String   @id @default(cuid())
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  url        String
+  nombreArchivo String?
+  tipoMime   String?
+  createdAt  DateTime @default(now())
+
+  @@index([incidentId])
+  @@map("attachments")
+}
+
+// ---------------------------------------------------------------------------
+// Bitácora de auditoría
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id           String          @id @default(cuid())
+  entidad      String
+  entidadId    String
+  accion       AccionAuditoria
+  usuarioId    String?
+  usuario      User?           @relation(fields: [usuarioId], references: [id])
+  usuarioNombre String?
+  cambios      Json?
+  ip           String?
+  createdAt    DateTime        @default(now())
+
+  @@index([entidad, entidadId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Secuencia de códigos por año (EMG-2026-000001)
+// ---------------------------------------------------------------------------
+
+model SequenceCounter {
+  key   String @id
+  value Int    @default(0)
+
+  @@map("sequence_counters")
+}

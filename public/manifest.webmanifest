@@ -1,0 +1,11 @@
+{
+  "name": "Sistema de Gestión de Emergencias",
+  "short_name": "Emergencias",
+  "description": "Reporta y gestiona emergencias, personas afectadas, traslados y ayuda humanitaria.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f5f7",
+  "theme_color": "#14406b",
+  "lang": "es",
+  "icons": []
+}
