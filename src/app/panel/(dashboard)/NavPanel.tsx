@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { puedeAuditarYExportar } from "@/lib/permisos";
 
-const ENLACES = [
+const ENLACES_BASE = [
   { href: "/panel", label: "Inicio", icono: "📊" },
   { href: "/panel/incidentes", label: "Incidentes", icono: "🆘" },
   { href: "/panel/personas", label: "Personas", icono: "🧍" },
@@ -12,11 +13,13 @@ const ENLACES = [
   { href: "/panel/ayudas", label: "Ayudas", icono: "🏠" },
   { href: "/panel/donaciones", label: "Donaciones", icono: "🎁" },
   { href: "/panel/mascotas", label: "Mascotas", icono: "🐾" },
-  { href: "/panel/auditoria", label: "Auditoría", icono: "🕵️" },
 ];
+
+const ENLACE_AUDITORIA = { href: "/panel/auditoria", label: "Auditoría", icono: "🕵️" };
 
 export default function NavPanel({ usuario }: { usuario: { name: string; role: string } }) {
   const pathname = usePathname();
+  const ENLACES = puedeAuditarYExportar(usuario.role) ? [...ENLACES_BASE, ENLACE_AUDITORIA] : ENLACES_BASE;
 
   return (
     <>

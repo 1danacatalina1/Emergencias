@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { aidRequestUpdateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
+import { puedeEscribir } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,9 @@ export async function PATCH(request: Request, { params }: Params) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+  if (!puedeEscribir(session.user.role)) {
+    return NextResponse.json({ error: "Tu rol no tiene permiso para editar solicitudes de ayuda" }, { status: 403 });
   }
 
   const { id } = await params;

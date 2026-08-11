@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { donationPointUpdateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
+import { puedeEscribir, puedeEliminar } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,9 @@ export async function PATCH(request: Request, { params }: Params) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+  if (!puedeEscribir(session.user.role)) {
+    return NextResponse.json({ error: "Tu rol no tiene permiso para editar puntos de acopio" }, { status: 403 });
   }
 
   const { id } = await params;
@@ -55,8 +59,11 @@ export async function PATCH(request: Request, { params }: Params) {
 
 export async function DELETE(request: Request, { params }: Params) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+  if (!puedeEliminar(session.user.role)) {
+    return NextResponse.json({ error: "Tu rol no tiene permiso para eliminar puntos de acopio" }, { status: 403 });
   }
   const { id } = await params;
   const existente = await prisma.donationPoint.findUnique({ where: { id } });

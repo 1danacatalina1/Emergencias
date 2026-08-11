@@ -152,6 +152,7 @@ enum AccionAuditoria {
   ACTUALIZAR
   ELIMINAR
   LOGIN
+  EXPORTAR
 }
 
 enum EstadoPuntoAcopio {

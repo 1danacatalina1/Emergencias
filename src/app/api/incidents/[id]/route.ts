@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { incidentUpdateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
 import { serializarIncidentPublico } from "@/lib/serializers";
+import { puedeEscribir, puedeEliminar } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,9 @@ export async function PATCH(request: Request, { params }: Params) {
   if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
+  if (!puedeEscribir(session.user.role)) {
+    return NextResponse.json({ error: "Tu rol no tiene permiso para editar reportes" }, { status: 403 });
+  }
 
   const { id } = await params;
   const body = await request.json();
@@ -73,8 +77,11 @@ export async function PATCH(request: Request, { params }: Params) {
 
 export async function DELETE(request: Request, { params }: Params) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+  if (!puedeEliminar(session.user.role)) {
+    return NextResponse.json({ error: "Tu rol no tiene permiso para eliminar reportes" }, { status: 403 });
   }
 
   const { id } = await params;

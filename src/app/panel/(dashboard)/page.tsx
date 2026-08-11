@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { puedeAuditarYExportar } from "@/lib/permisos";
 import { Tarjeta, Boton } from "@/components/ui/campos";
 import { InsigniaEstado, InsigniaPrioridad } from "@/components/ui/insignias";
 
 export const dynamic = "force-dynamic";
 
 export default async function PanelInicioPage() {
+  const session = await auth();
+  const puedeExportar = puedeAuditarYExportar(session?.user?.role);
+
   const [
     totalIncidentes,
     incidentesAbiertos,
@@ -58,11 +63,13 @@ export default async function PanelInicioPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold">Panel de gestión</h1>
-        <a href="/api/export/xlsx">
-          <Boton type="button" variante="secundario" className="w-auto px-4 py-2 text-sm">
-            ⬇️ Exportar a Excel
-          </Boton>
-        </a>
+        {puedeExportar && (
+          <a href="/api/export/xlsx">
+            <Boton type="button" variante="secundario" className="w-auto px-4 py-2 text-sm">
+              ⬇️ Exportar a Excel
+            </Boton>
+          </a>
+        )}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">

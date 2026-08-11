@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { puedeAuditarYExportar } from "@/lib/permisos";
+import { registrarAuditoria, obtenerIp } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +13,13 @@ function estiloEncabezado(ws: ExcelJS.Worksheet) {
   ws.views = [{ state: "frozen", ySplit: 1 }];
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+  if (!puedeAuditarYExportar(session.user.role)) {
+    return NextResponse.json({ error: "Tu rol no tiene permiso para exportar la base de datos" }, { status: 403 });
   }
 
   const [incidentes, personas, traslados, ayudas, puntosAcopio, donaciones, mascotas] = await prisma.$transaction([
@@ -253,6 +258,26 @@ export async function GET() {
 
   const buffer = await workbook.xlsx.writeBuffer();
   const fecha = new Date().toISOString().slice(0, 10);
+
+  await registrarAuditoria({
+    entidad: "Export",
+    entidadId: fecha,
+    accion: "EXPORTAR",
+    usuarioId: session.user.id,
+    usuarioNombre: session.user.name,
+    cambios: {
+      registros: {
+        incidentes: incidentes.length,
+        personas: personas.length,
+        traslados: traslados.length,
+        ayudas: ayudas.length,
+        puntosAcopio: puntosAcopio.length,
+        donaciones: donaciones.length,
+        mascotas: mascotas.length,
+      },
+    },
+    ip: obtenerIp(request),
+  });
 
   return new NextResponse(buffer as unknown as BodyInit, {
     headers: {

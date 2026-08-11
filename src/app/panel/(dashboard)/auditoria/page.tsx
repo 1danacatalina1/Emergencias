@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { puedeAuditarYExportar } from "@/lib/permisos";
 import { Tarjeta } from "@/components/ui/campos";
 import { formatearFechaHora } from "@/lib/fecha";
 
@@ -9,9 +11,25 @@ const ETIQUETAS_ACCION: Record<string, string> = {
   ACTUALIZAR: "Actualizó",
   ELIMINAR: "Eliminó",
   LOGIN: "Inició sesión en",
+  EXPORTAR: "Exportó",
 };
 
 export default async function AuditoriaPage() {
+  const session = await auth();
+  if (!puedeAuditarYExportar(session?.user?.role)) {
+    return (
+      <div>
+        <h1 className="text-xl font-bold">Bitácora de auditoría</h1>
+        <Tarjeta className="mt-4 p-4">
+          <p className="text-sm text-muted">
+            Tu rol ({session?.user?.role}) no tiene permiso para ver la bitácora de auditoría. Esta
+            sección está restringida a Administradores y Coordinadores.
+          </p>
+        </Tarjeta>
+      </div>
+    );
+  }
+
   const logs = await prisma.auditLog.findMany({
     orderBy: { createdAt: "desc" },
     take: 200,

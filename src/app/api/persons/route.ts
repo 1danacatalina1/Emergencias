@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { personCreateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
+import { puedeEscribir } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,9 @@ export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+  if (!puedeEscribir(session.user.role)) {
+    return NextResponse.json({ error: "Tu rol no tiene permiso para registrar personas" }, { status: 403 });
   }
 
   const body = await request.json();
