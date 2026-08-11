@@ -34,12 +34,21 @@ const ACCIONES = [
 export default function Home() {
   return (
     <div className="flex min-h-full flex-1 flex-col bg-background">
-      <header className="bg-primary px-5 pb-8 pt-10 text-white">
-        <p className="text-sm font-medium uppercase tracking-wide text-white/70">Colombia · Atención de emergencias</p>
-        <h1 className="mt-1 text-2xl font-bold leading-tight">Sistema de Gestión de Emergencias</h1>
-        <p className="mt-2 text-sm text-white/80">
-          Reporta y consulta información durante una emergencia o desastre. Actúa ahora.
-        </p>
+      <header
+        className="relative overflow-hidden px-5 pb-8 pt-10 text-white"
+        style={{
+          background:
+            "linear-gradient(to bottom, #FCD116 0%, #FCD116 50%, #003893 50%, #003893 75%, #CE1126 75%, #CE1126 100%)",
+        }}
+      >
+        <div className="absolute inset-0 bg-black/40" aria-hidden />
+        <div className="relative">
+          <p className="text-sm font-medium uppercase tracking-wide text-white/80">Colombia · Atención de emergencias</p>
+          <h1 className="mt-1 text-2xl font-bold leading-tight drop-shadow-sm">Sistema de Gestión de Emergencias</h1>
+          <p className="mt-2 text-sm text-white/90">
+            Reporta y consulta información durante una emergencia o desastre. Actúa ahora.
+          </p>
+        </div>
       </header>
 
       <main className="mx-auto -mt-4 w-full max-w-xl flex-1 px-4 pb-10">
