@@ -8,10 +8,17 @@ import { Boton } from "@/components/ui/campos";
 
 const CENTRO_DEFECTO: [number, number] = [4.5709, -74.2973]; // Colombia
 
+interface DireccionEncontrada {
+  direccion: string;
+  municipio: string;
+  departamento: string;
+}
+
 interface Props {
   lat: number | null;
   lng: number | null;
   onChange: (lat: number, lng: number) => void;
+  onDireccionEncontrada?: (direccion: DireccionEncontrada) => void;
 }
 
 function ManejadorClicMapa({ onChange }: { onChange: (lat: number, lng: number) => void }) {
@@ -23,10 +30,38 @@ function ManejadorClicMapa({ onChange }: { onChange: (lat: number, lng: number) 
   return null;
 }
 
-export default function SelectorUbicacion({ lat, lng, onChange }: Props) {
+export default function SelectorUbicacion({ lat, lng, onChange, onDireccionEncontrada }: Props) {
   const [buscando, setBuscando] = useState(false);
+  const [buscandoDireccion, setBuscandoDireccion] = useState(false);
   const [errorGeo, setErrorGeo] = useState<string | null>(null);
   const posicion: [number, number] = lat !== null && lng !== null ? [lat, lng] : CENTRO_DEFECTO;
+
+  const buscarDireccion = useCallback(
+    async (la: number, lo: number) => {
+      if (!onDireccionEncontrada) return;
+      setBuscandoDireccion(true);
+      try {
+        const res = await fetch(`/api/geocode/reverse?lat=${la}&lng=${lo}`);
+        if (res.ok) {
+          const data = await res.json();
+          onDireccionEncontrada(data);
+        }
+      } catch {
+        // Si falla, la persona simplemente completa la dirección a mano.
+      } finally {
+        setBuscandoDireccion(false);
+      }
+    },
+    [onDireccionEncontrada],
+  );
+
+  const manejarCambioUbicacion = useCallback(
+    (la: number, lo: number) => {
+      onChange(la, lo);
+      buscarDireccion(la, lo);
+    },
+    [onChange, buscarDireccion],
+  );
 
   const usarMiUbicacion = useCallback(() => {
     if (!navigator.geolocation) {
@@ -37,7 +72,7 @@ export default function SelectorUbicacion({ lat, lng, onChange }: Props) {
     setErrorGeo(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        onChange(pos.coords.latitude, pos.coords.longitude);
+        manejarCambioUbicacion(pos.coords.latitude, pos.coords.longitude);
         setBuscando(false);
       },
       () => {
@@ -46,7 +81,7 @@ export default function SelectorUbicacion({ lat, lng, onChange }: Props) {
       },
       { enableHighAccuracy: true, timeout: 10000 },
     );
-  }, [onChange]);
+  }, [manejarCambioUbicacion]);
 
   return (
     <div>
@@ -63,13 +98,14 @@ export default function SelectorUbicacion({ lat, lng, onChange }: Props) {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <ManejadorClicMapa onChange={onChange} />
+          <ManejadorClicMapa onChange={manejarCambioUbicacion} />
           {lat !== null && lng !== null && <Marker position={[lat, lng]} icon={crearIconoMarcador()} />}
         </MapContainer>
       </div>
       {lat !== null && lng !== null && (
         <p className="mt-1.5 text-xs text-muted">
           Coordenadas: {lat.toFixed(5)}, {lng.toFixed(5)}
+          {buscandoDireccion && " · buscando dirección…"}
         </p>
       )}
     </div>

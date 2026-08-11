@@ -175,7 +175,16 @@ export default function ReportarTrasladoPage() {
 
           <Tarjeta className="p-4">
             <h3 className="mb-3 font-bold">Ubicación del incidente</h3>
-            <SelectorUbicacion lat={lat} lng={lng} onChange={(la, lo) => { setLat(la); setLng(lo); }} />
+            <SelectorUbicacion
+              lat={lat}
+              lng={lng}
+              onChange={(la, lo) => { setLat(la); setLng(lo); }}
+              onDireccionEncontrada={(d) => {
+                if (!direccion && d.direccion) setDireccion(d.direccion);
+                if (!municipio && d.municipio) setMunicipio(d.municipio);
+                if (!departamento && d.departamento) setDepartamento(d.departamento);
+              }}
+            />
             <ErrorCampo mensaje={errores.latitud} />
             <div className="mt-4">
               <Etiqueta htmlFor="direccion">Dirección *</Etiqueta>
