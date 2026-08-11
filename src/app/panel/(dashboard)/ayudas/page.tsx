@@ -23,11 +23,14 @@ export default async function AyudasPage({
   return (
     <div>
       <h1 className="text-xl font-bold">Ayudas humanitarias ({ayudas.length})</h1>
-      <form className="mt-4" method="get">
-        <Seleccion name="estado" defaultValue={estado ?? ""} onChange={(e) => e.currentTarget.form?.requestSubmit()}>
+      <form className="mt-4 flex flex-col gap-2 sm:flex-row" method="get">
+        <Seleccion name="estado" defaultValue={estado ?? ""} className="sm:flex-1">
           <option value="">Todos los estados</option>
           {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
         </Seleccion>
+        <button type="submit" className="rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white sm:w-auto">
+          Filtrar
+        </button>
       </form>
       <AyudasLista ayudas={JSON.parse(JSON.stringify(ayudas))} />
     </div>
