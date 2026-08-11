@@ -30,13 +30,6 @@ const ACCIONES = [
     clase: "bg-warning text-white",
   },
   {
-    href: "/mapa",
-    icono: "📍",
-    titulo: "Ver mapa",
-    descripcion: "Consulta los incidentes activos georreferenciados",
-    clase: "bg-surface text-foreground border border-border",
-  },
-  {
     href: "/donar",
     icono: "🎁",
     titulo: "Donar",
@@ -49,6 +42,13 @@ const ACCIONES = [
     titulo: "Mascotas",
     descripcion: "Reporta una mascota perdida o avisa que encontraste una",
     clase: "bg-teal-700 text-white",
+  },
+  {
+    href: "/mapa",
+    icono: "📍",
+    titulo: "Ver mapa",
+    descripcion: "Consulta los incidentes activos georreferenciados",
+    clase: "bg-surface text-foreground border border-border",
   },
 ];
 
