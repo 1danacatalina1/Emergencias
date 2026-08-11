@@ -17,8 +17,10 @@ export default async function PanelInicioPage() {
     trasladosEnRuta,
     totalAyudas,
     ayudasPendientes,
+    puntosAcopioActivos,
+    donacionesOfrecidas,
     ultimosIncidentes,
-  ] = await Promise.all([
+  ] = await prisma.$transaction([
     prisma.incident.count(),
     prisma.incident.count({ where: { estado: { in: ["REPORTADO", "EN_ATENCION", "EN_PROCESO"] } } }),
     prisma.incident.count({ where: { nivelPrioridad: "CRITICA", estado: { notIn: ["RESUELTO", "CERRADO"] } } }),
@@ -29,6 +31,8 @@ export default async function PanelInicioPage() {
     prisma.transfer.count({ where: { estadoTraslado: "EN_RUTA" } }),
     prisma.aidRequest.count(),
     prisma.aidRequest.count({ where: { estado: { in: ["SOLICITADA", "EN_PROCESO"] } } }),
+    prisma.donationPoint.count({ where: { estado: "ACTIVO" } }),
+    prisma.donation.count({ where: { estado: { in: ["OFRECIDA", "CONFIRMADA"] } } }),
     prisma.incident.findMany({
       orderBy: { createdAt: "desc" },
       take: 8,
@@ -43,6 +47,8 @@ export default async function PanelInicioPage() {
     { label: "Personas fallecidas", valor: personasFallecidas, color: "text-slate-800" },
     { label: "Traslados en ruta", valor: trasladosEnRuta, de: totalTraslados, color: "text-warning" },
     { label: "Ayudas pendientes", valor: ayudasPendientes, de: totalAyudas, color: "text-primary" },
+    { label: "Puntos de acopio activos", valor: puntosAcopioActivos, color: "text-success" },
+    { label: "Donaciones por gestionar", valor: donacionesOfrecidas, color: "text-success" },
   ];
 
   return (

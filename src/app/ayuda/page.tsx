@@ -5,18 +5,7 @@ import Link from "next/link";
 import { EncabezadoPagina } from "@/components/EncabezadoPagina";
 import { Boton, Campo, AreaTexto, Seleccion, Etiqueta, ErrorCampo, Tarjeta } from "@/components/ui/campos";
 import SelectorUbicacion from "@/components/mapa/SelectorUbicacionDinamico";
-
-const TIPOS_AYUDA = [
-  { value: "ALIMENTOS", label: "Alimentos" },
-  { value: "AGUA", label: "Agua potable" },
-  { value: "REFUGIO_ALOJAMIENTO", label: "Refugio / alojamiento" },
-  { value: "MEDICAMENTOS", label: "Medicamentos" },
-  { value: "ATENCION_MEDICA", label: "Atención médica" },
-  { value: "ROPA_ABRIGO", label: "Ropa / abrigo" },
-  { value: "RESCATE", label: "Rescate" },
-  { value: "ELEMENTOS_ASEO", label: "Elementos de aseo" },
-  { value: "OTRO", label: "Otro" },
-];
+import { TIPOS_AYUDA } from "@/lib/catalogos";
 
 export default function SolicitarAyudaPage() {
   const [nombreSolicitante, setNombreSolicitante] = useState("");

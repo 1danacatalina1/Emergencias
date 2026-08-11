@@ -31,13 +31,16 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  incidentsCreated   Incident[]   @relation("IncidentCreatedBy")
-  incidentsUpdated   Incident[]   @relation("IncidentUpdatedBy")
-  personsCreated     Person[]     @relation("PersonCreatedBy")
-  transfersCreated   Transfer[]   @relation("TransferCreatedBy")
-  aidRequestsCreated AidRequest[] @relation("AidRequestCreatedBy")
-  aidRequestsUpdated AidRequest[] @relation("AidRequestUpdatedBy")
-  auditLogs          AuditLog[]
+  incidentsCreated      Incident[]      @relation("IncidentCreatedBy")
+  incidentsUpdated      Incident[]      @relation("IncidentUpdatedBy")
+  personsCreated        Person[]        @relation("PersonCreatedBy")
+  transfersCreated      Transfer[]      @relation("TransferCreatedBy")
+  aidRequestsCreated    AidRequest[]    @relation("AidRequestCreatedBy")
+  aidRequestsUpdated    AidRequest[]    @relation("AidRequestUpdatedBy")
+  donationPointsCreated DonationPoint[] @relation("DonationPointCreatedBy")
+  donationsCreated      Donation[]      @relation("DonationCreatedBy")
+  donationsUpdated      Donation[]      @relation("DonationUpdatedBy")
+  auditLogs             AuditLog[]
 
   @@map("users")
 }
@@ -47,11 +50,11 @@ model User {
 // ---------------------------------------------------------------------------
 
 model IncidentType {
-  id       String     @id @default(cuid())
-  nombre   String     @unique
-  slug     String     @unique
-  activo   Boolean    @default(true)
-  orden    Int        @default(0)
+  id     String  @id @default(cuid())
+  nombre String  @unique
+  slug   String  @unique
+  activo Boolean @default(true)
+  orden  Int     @default(0)
 
   incidents Incident[]
 
@@ -149,18 +152,31 @@ enum AccionAuditoria {
   LOGIN
 }
 
+enum EstadoPuntoAcopio {
+  ACTIVO
+  PAUSADO
+  CERRADO
+}
+
+enum EstadoDonacion {
+  OFRECIDA
+  CONFIRMADA
+  RECIBIDA
+  CANCELADA
+}
+
 // ---------------------------------------------------------------------------
 // Incidentes / emergencias
 // ---------------------------------------------------------------------------
 
 model Incident {
-  id                 String          @id @default(cuid())
-  codigo             String          @unique
+  id     String @id @default(cuid())
+  codigo String @unique
 
-  incidentTypeId     String
-  incidentType       IncidentType    @relation(fields: [incidentTypeId], references: [id])
-  subtipo            String?
-  descripcion        String
+  incidentTypeId String
+  incidentType   IncidentType @relation(fields: [incidentTypeId], references: [id])
+  subtipo        String?
+  descripcion    String
 
   direccion          String
   municipio          String
@@ -169,28 +185,28 @@ model Incident {
   longitud           Float
   precisionUbicacion Float?
 
-  nivelPrioridad     NivelPrioridad  @default(MEDIA)
-  estado             EstadoIncidente @default(REPORTADO)
+  nivelPrioridad NivelPrioridad  @default(MEDIA)
+  estado         EstadoIncidente @default(REPORTADO)
 
-  fechaEvento        DateTime        @default(now())
-  fechaReporte       DateTime        @default(now())
+  fechaEvento  DateTime @default(now())
+  fechaReporte DateTime @default(now())
 
-  reporteroNombre    String?
-  reporteroTelefono  String?
-  esAnonimo          Boolean         @default(false)
+  reporteroNombre   String?
+  reporteroTelefono String?
+  esAnonimo         Boolean @default(false)
 
-  creadoPorId        String?
-  creadoPor          User?           @relation("IncidentCreatedBy", fields: [creadoPorId], references: [id])
-  actualizadoPorId   String?
-  actualizadoPor     User?           @relation("IncidentUpdatedBy", fields: [actualizadoPorId], references: [id])
+  creadoPorId      String?
+  creadoPor        User?   @relation("IncidentCreatedBy", fields: [creadoPorId], references: [id])
+  actualizadoPorId String?
+  actualizadoPor   User?   @relation("IncidentUpdatedBy", fields: [actualizadoPorId], references: [id])
 
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  personas           Person[]
-  traslados          Transfer[]
-  ayudas             AidRequest[]
-  adjuntos           Attachment[]
+  personas  Person[]
+  traslados Transfer[]
+  ayudas    AidRequest[]
+  adjuntos  Attachment[]
 
   @@index([estado])
   @@index([nivelPrioridad])
@@ -204,36 +220,36 @@ model Incident {
 // ---------------------------------------------------------------------------
 
 model Person {
-  id                String        @id @default(cuid())
+  id String @id @default(cuid())
 
-  incidentId        String
-  incident          Incident      @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
 
-  nombreCompleto    String
-  tipoDocumento     TipoDocumento @default(SIN_DOCUMENTO)
-  numeroDocumento   String?
-  fechaNacimiento   DateTime?
-  edad              Int?
-  sexo              Sexo          @default(NO_INFORMA)
-  telefono          String?
+  nombreCompleto  String
+  tipoDocumento   TipoDocumento @default(SIN_DOCUMENTO)
+  numeroDocumento String?
+  fechaNacimiento DateTime?
+  edad            Int?
+  sexo            Sexo          @default(NO_INFORMA)
+  telefono        String?
 
-  estadoPersona     EstadoPersona @default(DESAPARECIDA)
-  condicionSalud    String?
+  estadoPersona       EstadoPersona @default(DESAPARECIDA)
+  condicionSalud      String?
   direccionResidencia String?
 
-  contactoNombre    String?
-  contactoTelefono  String?
+  contactoNombre     String?
+  contactoTelefono   String?
   contactoParentesco String?
 
-  observaciones     String?
+  observaciones String?
 
-  creadoPorId       String?
-  creadoPor         User?         @relation("PersonCreatedBy", fields: [creadoPorId], references: [id])
+  creadoPorId String?
+  creadoPor   User?   @relation("PersonCreatedBy", fields: [creadoPorId], references: [id])
 
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  traslados         Transfer[]
+  traslados Transfer[]
 
   @@index([incidentId])
   @@index([estadoPersona])
@@ -246,29 +262,29 @@ model Person {
 // ---------------------------------------------------------------------------
 
 model Transfer {
-  id               String         @id @default(cuid())
+  id String @id @default(cuid())
 
-  personId         String
-  person           Person         @relation(fields: [personId], references: [id], onDelete: Cascade)
+  personId String
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
 
-  incidentId       String?
-  incident         Incident?      @relation(fields: [incidentId], references: [id])
+  incidentId String?
+  incident   Incident? @relation(fields: [incidentId], references: [id])
 
-  centroMedico     String
-  tipoTraslado     TipoTraslado   @default(AMBULANCIA)
-  motivo           String
-  estadoTraslado   EstadoTraslado @default(SOLICITADO)
+  centroMedico   String
+  tipoTraslado   TipoTraslado   @default(AMBULANCIA)
+  motivo         String
+  estadoTraslado EstadoTraslado @default(SOLICITADO)
 
-  fechaTraslado    DateTime       @default(now())
-  vehiculoPlaca    String?
-  responsable      String?
-  observaciones    String?
+  fechaTraslado DateTime @default(now())
+  vehiculoPlaca String?
+  responsable   String?
+  observaciones String?
 
-  creadoPorId      String?
-  creadoPor        User?          @relation("TransferCreatedBy", fields: [creadoPorId], references: [id])
+  creadoPorId String?
+  creadoPor   User?   @relation("TransferCreatedBy", fields: [creadoPorId], references: [id])
 
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([personId])
   @@index([incidentId])
@@ -281,34 +297,34 @@ model Transfer {
 // ---------------------------------------------------------------------------
 
 model AidRequest {
-  id                 String         @id @default(cuid())
-  codigo             String         @unique
+  id     String @id @default(cuid())
+  codigo String @unique
 
-  incidentId         String?
-  incident           Incident?      @relation(fields: [incidentId], references: [id])
+  incidentId String?
+  incident   Incident? @relation(fields: [incidentId], references: [id])
 
-  nombreSolicitante  String
+  nombreSolicitante   String
   telefonoSolicitante String
-  tipoAyuda          TipoAyuda      @default(OTRO)
-  descripcion        String
-  cantidadPersonas   Int            @default(1)
+  tipoAyuda           TipoAyuda @default(OTRO)
+  descripcion         String
+  cantidadPersonas    Int       @default(1)
 
-  direccion          String
-  municipio          String
-  departamento       String
-  latitud            Float?
-  longitud           Float?
+  direccion    String
+  municipio    String
+  departamento String
+  latitud      Float?
+  longitud     Float?
 
-  prioridad          NivelPrioridad @default(MEDIA)
-  estado             EstadoAyuda    @default(SOLICITADA)
+  prioridad NivelPrioridad @default(MEDIA)
+  estado    EstadoAyuda    @default(SOLICITADA)
 
-  creadoPorId        String?
-  creadoPor          User?          @relation("AidRequestCreatedBy", fields: [creadoPorId], references: [id])
-  actualizadoPorId   String?
-  actualizadoPor     User?          @relation("AidRequestUpdatedBy", fields: [actualizadoPorId], references: [id])
+  creadoPorId      String?
+  creadoPor        User?   @relation("AidRequestCreatedBy", fields: [creadoPorId], references: [id])
+  actualizadoPorId String?
+  actualizadoPor   User?   @relation("AidRequestUpdatedBy", fields: [actualizadoPorId], references: [id])
 
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([estado])
   @@index([tipoAyuda])
@@ -321,16 +337,91 @@ model AidRequest {
 // ---------------------------------------------------------------------------
 
 model Attachment {
-  id         String   @id @default(cuid())
-  incidentId String
-  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  url        String
+  id            String   @id @default(cuid())
+  incidentId    String
+  incident      Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  url           String
   nombreArchivo String?
-  tipoMime   String?
-  createdAt  DateTime @default(now())
+  tipoMime      String?
+  createdAt     DateTime @default(now())
 
   @@index([incidentId])
   @@map("attachments")
+}
+
+// ---------------------------------------------------------------------------
+// Puntos de acopio de donaciones
+// ---------------------------------------------------------------------------
+
+model DonationPoint {
+  id     String @id @default(cuid())
+  codigo String @unique
+
+  nombre         String
+  descripcion    String?
+  tiposAceptados TipoAyuda[]
+
+  direccion    String
+  municipio    String
+  departamento String
+  latitud      Float
+  longitud     Float
+
+  responsable      String?
+  telefonoContacto String
+  horario          String?
+
+  estado EstadoPuntoAcopio @default(ACTIVO)
+
+  creadoPorId String?
+  creadoPor   User?   @relation("DonationPointCreatedBy", fields: [creadoPorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  donaciones Donation[]
+
+  @@index([estado])
+  @@index([municipio])
+  @@map("donation_points")
+}
+
+// ---------------------------------------------------------------------------
+// Donaciones ofrecidas
+// ---------------------------------------------------------------------------
+
+model Donation {
+  id     String @id @default(cuid())
+  codigo String @unique
+
+  donationPointId String?
+  donationPoint   DonationPoint? @relation(fields: [donationPointId], references: [id])
+
+  nombreDonante   String
+  telefonoDonante String
+  tipoAyuda       TipoAyuda @default(OTRO)
+  descripcion     String
+
+  direccion    String?
+  municipio    String
+  departamento String
+  latitud      Float?
+  longitud     Float?
+
+  estado EstadoDonacion @default(OFRECIDA)
+
+  creadoPorId      String?
+  creadoPor        User?   @relation("DonationCreatedBy", fields: [creadoPorId], references: [id])
+  actualizadoPorId String?
+  actualizadoPor   User?   @relation("DonationUpdatedBy", fields: [actualizadoPorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([estado])
+  @@index([tipoAyuda])
+  @@index([municipio])
+  @@map("donations")
 }
 
 // ---------------------------------------------------------------------------
@@ -338,16 +429,16 @@ model Attachment {
 // ---------------------------------------------------------------------------
 
 model AuditLog {
-  id           String          @id @default(cuid())
-  entidad      String
-  entidadId    String
-  accion       AccionAuditoria
-  usuarioId    String?
-  usuario      User?           @relation(fields: [usuarioId], references: [id])
+  id            String          @id @default(cuid())
+  entidad       String
+  entidadId     String
+  accion        AccionAuditoria
+  usuarioId     String?
+  usuario       User?           @relation(fields: [usuarioId], references: [id])
   usuarioNombre String?
-  cambios      Json?
-  ip           String?
-  createdAt    DateTime        @default(now())
+  cambios       Json?
+  ip            String?
+  createdAt     DateTime        @default(now())
 
   @@index([entidad, entidadId])
   @@index([createdAt])

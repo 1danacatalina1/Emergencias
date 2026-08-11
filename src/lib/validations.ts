@@ -213,3 +213,58 @@ export const loginSchema = z.object({
   email: z.string().email("Correo inválido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
+
+// Puntos de acopio de donaciones (público)
+export const estadoPuntoAcopioEnum = z.enum(["ACTIVO", "PAUSADO", "CERRADO"]);
+
+export const donationPointCreateSchema = z.object({
+  nombre: z.string().min(3, "Indica el nombre del punto de acopio"),
+  descripcion: z.string().optional().nullable(),
+  tiposAceptados: z.array(tipoAyudaEnum).min(1, "Selecciona al menos un tipo de donación"),
+  direccion: z.string().min(3, "La dirección es obligatoria"),
+  municipio: z.string().min(2, "El municipio es obligatorio"),
+  departamento: z.string().min(2, "El departamento es obligatorio"),
+  latitud: z.coerce.number().min(-90).max(90),
+  longitud: z.coerce.number().min(-180).max(180),
+  responsable: z.string().optional().nullable(),
+  telefonoContacto: z.string().min(7, "Indica un teléfono de contacto"),
+  horario: z.string().optional().nullable(),
+});
+
+export const donationPointUpdateSchema = z.object({
+  nombre: z.string().min(3).optional(),
+  descripcion: z.string().optional().nullable(),
+  tiposAceptados: z.array(tipoAyudaEnum).min(1).optional(),
+  direccion: z.string().min(3).optional(),
+  municipio: z.string().min(2).optional(),
+  departamento: z.string().min(2).optional(),
+  latitud: z.coerce.number().min(-90).max(90).optional(),
+  longitud: z.coerce.number().min(-180).max(180).optional(),
+  responsable: z.string().optional().nullable(),
+  telefonoContacto: z.string().min(7).optional(),
+  horario: z.string().optional().nullable(),
+  estado: estadoPuntoAcopioEnum.optional(),
+});
+
+// Donaciones ofrecidas (público)
+export const estadoDonacionEnum = z.enum(["OFRECIDA", "CONFIRMADA", "RECIBIDA", "CANCELADA"]);
+
+export const donationCreateSchema = z.object({
+  donationPointId: z.string().optional().nullable(),
+  nombreDonante: z.string().min(3, "Indica tu nombre completo"),
+  telefonoDonante: z.string().min(7, "Indica un teléfono de contacto"),
+  tipoAyuda: tipoAyudaEnum.default("OTRO"),
+  descripcion: z.string().min(5, "Describe qué quieres donar (tipo y cantidad)"),
+  direccion: z.string().optional().nullable(),
+  municipio: z.string().min(2, "El municipio es obligatorio"),
+  departamento: z.string().min(2, "El departamento es obligatorio"),
+  latitud: z.coerce.number().min(-90).max(90).optional().nullable(),
+  longitud: z.coerce.number().min(-180).max(180).optional().nullable(),
+});
+
+export const donationUpdateSchema = z.object({
+  tipoAyuda: tipoAyudaEnum.optional(),
+  descripcion: z.string().min(5).optional(),
+  estado: estadoDonacionEnum.optional(),
+  donationPointId: z.string().optional().nullable(),
+});

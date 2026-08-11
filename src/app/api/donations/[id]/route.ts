@@ -1,0 +1,58 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { donationUpdateSchema } from "@/lib/validations";
+import { registrarAuditoria, obtenerIp } from "@/lib/audit";
+
+export const dynamic = "force-dynamic";
+
+type Params = { params: Promise<{ id: string }> };
+
+export async function GET(request: Request, { params }: Params) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+  const { id } = await params;
+  const donacion = await prisma.donation.findUnique({ where: { id }, include: { donationPoint: true } });
+  if (!donacion) {
+    return NextResponse.json({ error: "Donación no encontrada" }, { status: 404 });
+  }
+  return NextResponse.json(donacion);
+}
+
+export async function PATCH(request: Request, { params }: Params) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const body = await request.json();
+  const parsed = donationUpdateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Datos inválidos", detalles: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const existente = await prisma.donation.findUnique({ where: { id } });
+  if (!existente) {
+    return NextResponse.json({ error: "Donación no encontrada" }, { status: 404 });
+  }
+
+  const donacion = await prisma.donation.update({
+    where: { id },
+    data: { ...parsed.data, actualizadoPorId: session.user.id },
+  });
+
+  await registrarAuditoria({
+    entidad: "Donation",
+    entidadId: donacion.id,
+    accion: "ACTUALIZAR",
+    usuarioId: session.user.id,
+    usuarioNombre: session.user.name,
+    cambios: { antes: existente, despues: donacion },
+    ip: obtenerIp(request),
+  });
+
+  return NextResponse.json(donacion);
+}

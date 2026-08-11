@@ -20,6 +20,13 @@ const pool =
     max: 10,
   });
 
+// Requerido por node-postgres: sin este listener, un error asíncrono en una
+// conexión inactiva del pool (p. ej. un corte de red transitorio) lanza una
+// excepción no controlada en el proceso de Node en lugar de solo esa consulta.
+pool.on("error", (err) => {
+  console.error("Error inesperado en una conexión inactiva del pool de PostgreSQL", err);
+});
+
 const adapter = new PrismaPg(pool);
 
 export const prisma =

@@ -17,7 +17,7 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const [incidentes, personas, traslados, ayudas] = await Promise.all([
+  const [incidentes, personas, traslados, ayudas, puntosAcopio, donaciones] = await Promise.all([
     prisma.incident.findMany({ include: { incidentType: true }, orderBy: { createdAt: "desc" } }),
     prisma.person.findMany({ include: { incident: { select: { codigo: true } } }, orderBy: { createdAt: "desc" } }),
     prisma.transfer.findMany({
@@ -25,6 +25,8 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     }),
     prisma.aidRequest.findMany({ include: { incident: { select: { codigo: true } } }, orderBy: { createdAt: "desc" } }),
+    prisma.donationPoint.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.donation.findMany({ include: { donationPoint: { select: { nombre: true } } }, orderBy: { createdAt: "desc" } }),
   ]);
 
   const workbook = new ExcelJS.Workbook();
@@ -154,6 +156,62 @@ export async function GET() {
     })),
   );
   estiloEncabezado(wsAyudas);
+
+  const wsPuntos = workbook.addWorksheet("Puntos de acopio");
+  wsPuntos.columns = [
+    { header: "Código", key: "codigo", width: 16 },
+    { header: "Nombre", key: "nombre", width: 26 },
+    { header: "Tipos aceptados", key: "tiposAceptados", width: 34 },
+    { header: "Dirección", key: "direccion", width: 26 },
+    { header: "Municipio", key: "municipio", width: 16 },
+    { header: "Departamento", key: "departamento", width: 16 },
+    { header: "Responsable", key: "responsable", width: 20 },
+    { header: "Teléfono", key: "telefonoContacto", width: 14 },
+    { header: "Horario", key: "horario", width: 18 },
+    { header: "Estado", key: "estado", width: 12 },
+  ];
+  wsPuntos.addRows(
+    puntosAcopio.map((p) => ({
+      codigo: p.codigo,
+      nombre: p.nombre,
+      tiposAceptados: p.tiposAceptados.join(", "),
+      direccion: p.direccion,
+      municipio: p.municipio,
+      departamento: p.departamento,
+      responsable: p.responsable,
+      telefonoContacto: p.telefonoContacto,
+      horario: p.horario,
+      estado: p.estado,
+    })),
+  );
+  estiloEncabezado(wsPuntos);
+
+  const wsDonaciones = workbook.addWorksheet("Donaciones");
+  wsDonaciones.columns = [
+    { header: "Código", key: "codigo", width: 16 },
+    { header: "Donante", key: "nombreDonante", width: 24 },
+    { header: "Teléfono", key: "telefonoDonante", width: 14 },
+    { header: "Tipo de ayuda", key: "tipoAyuda", width: 20 },
+    { header: "Descripción", key: "descripcion", width: 34 },
+    { header: "Punto de acopio", key: "puntoAcopio", width: 24 },
+    { header: "Municipio", key: "municipio", width: 16 },
+    { header: "Departamento", key: "departamento", width: 16 },
+    { header: "Estado", key: "estado", width: 14 },
+  ];
+  wsDonaciones.addRows(
+    donaciones.map((d) => ({
+      codigo: d.codigo,
+      nombreDonante: d.nombreDonante,
+      telefonoDonante: d.telefonoDonante,
+      tipoAyuda: d.tipoAyuda,
+      descripcion: d.descripcion,
+      puntoAcopio: d.donationPoint?.nombre,
+      municipio: d.municipio,
+      departamento: d.departamento,
+      estado: d.estado,
+    })),
+  );
+  estiloEncabezado(wsDonaciones);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const fecha = new Date().toISOString().slice(0, 10);

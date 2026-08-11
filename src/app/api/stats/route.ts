@@ -23,7 +23,7 @@ export async function GET() {
     ayudasPendientes,
     porEstado,
     porTipo,
-  ] = await Promise.all([
+  ] = await prisma.$transaction([
     prisma.incident.count(),
     prisma.incident.count({ where: { estado: { in: ["REPORTADO", "EN_ATENCION", "EN_PROCESO"] } } }),
     prisma.incident.count({ where: { nivelPrioridad: "CRITICA", estado: { notIn: ["RESUELTO", "CERRADO"] } } }),
@@ -34,8 +34,8 @@ export async function GET() {
     prisma.transfer.count({ where: { estadoTraslado: "EN_RUTA" } }),
     prisma.aidRequest.count(),
     prisma.aidRequest.count({ where: { estado: { in: ["SOLICITADA", "EN_PROCESO"] } } }),
-    prisma.incident.groupBy({ by: ["estado"], _count: true }),
-    prisma.incident.groupBy({ by: ["incidentTypeId"], _count: true }),
+    prisma.incident.groupBy({ by: ["estado"], _count: true, orderBy: { estado: "asc" } }),
+    prisma.incident.groupBy({ by: ["incidentTypeId"], _count: true, orderBy: { incidentTypeId: "asc" } }),
   ]);
 
   const tipos = await prisma.incidentType.findMany();

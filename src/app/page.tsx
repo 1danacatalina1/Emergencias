@@ -29,6 +29,13 @@ const ACCIONES = [
     descripcion: "Consulta los incidentes activos georreferenciados",
     clase: "bg-surface text-foreground border border-border",
   },
+  {
+    href: "/donar",
+    icono: "🎁",
+    titulo: "Donar",
+    descripcion: "Dona artículos o registra un punto de acopio para donaciones",
+    clase: "bg-success text-white",
+  },
 ];
 
 export default function Home() {
