@@ -292,3 +292,36 @@ export const missingPersonCreateSchema = z.object({
 
   foto: z.string().url().optional().nullable(),
 });
+
+// Mascotas perdidas / encontradas (público)
+export const tipoReporteMascotaEnum = z.enum(["PERDIDA", "ENCONTRADA"]);
+export const especieMascotaEnum = z.enum(["PERRO", "GATO", "AVE", "OTRO"]);
+export const estadoMascotaEnum = z.enum(["ACTIVO", "REUNIDO", "CERRADO"]);
+
+export const petCreateSchema = z.object({
+  tipo: tipoReporteMascotaEnum,
+  especie: especieMascotaEnum.default("OTRO"),
+  nombre: z.string().optional().nullable(),
+  raza: z.string().optional().nullable(),
+  descripcion: z.string().min(5, "Describe la mascota: color, tamaño, señas particulares"),
+  fecha: z.coerce.date().optional(),
+
+  direccion: z.string().min(3, "Indica la dirección"),
+  municipio: z.string().min(2, "El municipio es obligatorio"),
+  departamento: z.string().min(2, "El departamento es obligatorio"),
+  latitud: z.coerce.number().min(-90).max(90),
+  longitud: z.coerce.number().min(-180).max(180),
+
+  contactoNombre: z.string().min(3, "Indica tu nombre"),
+  contactoTelefono: z.string().min(7, "Indica un teléfono de contacto"),
+
+  fotoUrl: z.string().url().optional().nullable(),
+});
+
+export const petUpdateSchema = z.object({
+  especie: especieMascotaEnum.optional(),
+  nombre: z.string().optional().nullable(),
+  raza: z.string().optional().nullable(),
+  descripcion: z.string().min(5).optional(),
+  estado: estadoMascotaEnum.optional(),
+});

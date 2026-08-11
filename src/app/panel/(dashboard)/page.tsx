@@ -19,6 +19,7 @@ export default async function PanelInicioPage() {
     ayudasPendientes,
     puntosAcopioActivos,
     donacionesOfrecidas,
+    mascotasActivas,
     ultimosIncidentes,
   ] = await prisma.$transaction([
     prisma.incident.count(),
@@ -33,6 +34,7 @@ export default async function PanelInicioPage() {
     prisma.aidRequest.count({ where: { estado: { in: ["SOLICITADA", "EN_PROCESO"] } } }),
     prisma.donationPoint.count({ where: { estado: "ACTIVO" } }),
     prisma.donation.count({ where: { estado: { in: ["OFRECIDA", "CONFIRMADA"] } } }),
+    prisma.pet.count({ where: { estado: "ACTIVO" } }),
     prisma.incident.findMany({
       orderBy: { createdAt: "desc" },
       take: 8,
@@ -49,6 +51,7 @@ export default async function PanelInicioPage() {
     { label: "Ayudas pendientes", valor: ayudasPendientes, de: totalAyudas, color: "text-primary" },
     { label: "Puntos de acopio activos", valor: puntosAcopioActivos, color: "text-success" },
     { label: "Donaciones por gestionar", valor: donacionesOfrecidas, color: "text-success" },
+    { label: "Mascotas activas", valor: mascotasActivas, color: "text-teal-700" },
   ];
 
   return (

@@ -43,6 +43,13 @@ const ACCIONES = [
     descripcion: "Dona artículos o registra un punto de acopio para donaciones",
     clase: "bg-success text-white",
   },
+  {
+    href: "/mascotas",
+    icono: "🐾",
+    titulo: "Mascotas",
+    descripcion: "Reporta una mascota perdida o avisa que encontraste una",
+    clase: "bg-teal-700 text-white",
+  },
 ];
 
 export default function Home() {

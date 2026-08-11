@@ -11,6 +11,7 @@ const ENLACES = [
   { href: "/panel/traslados", label: "Traslados", icono: "🚑" },
   { href: "/panel/ayudas", label: "Ayudas", icono: "🏠" },
   { href: "/panel/donaciones", label: "Donaciones", icono: "🎁" },
+  { href: "/panel/mascotas", label: "Mascotas", icono: "🐾" },
   { href: "/panel/auditoria", label: "Auditoría", icono: "🕵️" },
 ];
 

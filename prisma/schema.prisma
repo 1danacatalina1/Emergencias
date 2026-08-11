@@ -40,6 +40,8 @@ model User {
   donationPointsCreated DonationPoint[] @relation("DonationPointCreatedBy")
   donationsCreated      Donation[]      @relation("DonationCreatedBy")
   donationsUpdated      Donation[]      @relation("DonationUpdatedBy")
+  petsCreated           Pet[]           @relation("PetCreatedBy")
+  petsUpdated           Pet[]           @relation("PetUpdatedBy")
   auditLogs             AuditLog[]
 
   @@map("users")
@@ -163,6 +165,24 @@ enum EstadoDonacion {
   CONFIRMADA
   RECIBIDA
   CANCELADA
+}
+
+enum TipoReporteMascota {
+  PERDIDA
+  ENCONTRADA
+}
+
+enum EspecieMascota {
+  PERRO
+  GATO
+  AVE
+  OTRO
+}
+
+enum EstadoMascota {
+  ACTIVO
+  REUNIDO
+  CERRADO
 }
 
 // ---------------------------------------------------------------------------
@@ -427,6 +447,49 @@ model Donation {
   @@index([tipoAyuda])
   @@index([municipio])
   @@map("donations")
+}
+
+// ---------------------------------------------------------------------------
+// Mascotas perdidas / encontradas
+// ---------------------------------------------------------------------------
+
+model Pet {
+  id     String             @id @default(cuid())
+  codigo String             @unique
+  tipo   TipoReporteMascota
+
+  especie     EspecieMascota @default(OTRO)
+  nombre      String?
+  raza        String?
+  descripcion String
+
+  fecha DateTime @default(now())
+
+  direccion    String
+  municipio    String
+  departamento String
+  latitud      Float
+  longitud     Float
+
+  contactoNombre   String
+  contactoTelefono String
+
+  fotoUrl String?
+
+  estado EstadoMascota @default(ACTIVO)
+
+  creadoPorId      String?
+  creadoPor        User?   @relation("PetCreatedBy", fields: [creadoPorId], references: [id])
+  actualizadoPorId String?
+  actualizadoPor   User?   @relation("PetUpdatedBy", fields: [actualizadoPorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tipo])
+  @@index([estado])
+  @@index([municipio])
+  @@map("pets")
 }
 
 // ---------------------------------------------------------------------------

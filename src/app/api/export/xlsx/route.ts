@@ -17,7 +17,7 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const [incidentes, personas, traslados, ayudas, puntosAcopio, donaciones] = await Promise.all([
+  const [incidentes, personas, traslados, ayudas, puntosAcopio, donaciones, mascotas] = await prisma.$transaction([
     prisma.incident.findMany({ include: { incidentType: true }, orderBy: { createdAt: "desc" } }),
     prisma.person.findMany({ include: { incident: { select: { codigo: true } } }, orderBy: { createdAt: "desc" } }),
     prisma.transfer.findMany({
@@ -27,6 +27,7 @@ export async function GET() {
     prisma.aidRequest.findMany({ include: { incident: { select: { codigo: true } } }, orderBy: { createdAt: "desc" } }),
     prisma.donationPoint.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.donation.findMany({ include: { donationPoint: { select: { nombre: true } } }, orderBy: { createdAt: "desc" } }),
+    prisma.pet.findMany({ orderBy: { createdAt: "desc" } }),
   ]);
 
   const workbook = new ExcelJS.Workbook();
@@ -216,6 +217,39 @@ export async function GET() {
     })),
   );
   estiloEncabezado(wsDonaciones);
+
+  const wsMascotas = workbook.addWorksheet("Mascotas");
+  wsMascotas.columns = [
+    { header: "Código", key: "codigo", width: 16 },
+    { header: "Tipo", key: "tipo", width: 12 },
+    { header: "Especie", key: "especie", width: 10 },
+    { header: "Nombre", key: "nombre", width: 16 },
+    { header: "Raza", key: "raza", width: 16 },
+    { header: "Descripción", key: "descripcion", width: 34 },
+    { header: "Dirección", key: "direccion", width: 24 },
+    { header: "Municipio", key: "municipio", width: 16 },
+    { header: "Departamento", key: "departamento", width: 16 },
+    { header: "Contacto", key: "contactoNombre", width: 20 },
+    { header: "Tel. contacto", key: "contactoTelefono", width: 14 },
+    { header: "Estado", key: "estado", width: 14 },
+  ];
+  wsMascotas.addRows(
+    mascotas.map((m) => ({
+      codigo: m.codigo,
+      tipo: m.tipo,
+      especie: m.especie,
+      nombre: m.nombre,
+      raza: m.raza,
+      descripcion: m.descripcion,
+      direccion: m.direccion,
+      municipio: m.municipio,
+      departamento: m.departamento,
+      contactoNombre: m.contactoNombre,
+      contactoTelefono: m.contactoTelefono,
+      estado: m.estado,
+    })),
+  );
+  estiloEncabezado(wsMascotas);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const fecha = new Date().toISOString().slice(0, 10);
