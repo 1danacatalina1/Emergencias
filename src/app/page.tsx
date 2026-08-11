@@ -9,6 +9,13 @@ const ACCIONES = [
     clase: "bg-emergency text-white",
   },
   {
+    href: "/desaparecidos",
+    icono: "🔍",
+    titulo: "Persona desaparecida",
+    descripcion: "Reporta a alguien desaparecido o ayuda a identificar a los ya reportados",
+    clase: "bg-violet-700 text-white",
+  },
+  {
     href: "/ayuda",
     icono: "🏠",
     titulo: "Solicitar ayuda",

@@ -79,8 +79,10 @@ export async function GET() {
     { header: "Teléfono", key: "telefono", width: 14 },
     { header: "Estado", key: "estadoPersona", width: 14 },
     { header: "Condición de salud", key: "condicionSalud", width: 24 },
+    { header: "Descripción física", key: "descripcionFisica", width: 30 },
     { header: "Contacto", key: "contactoNombre", width: 20 },
     { header: "Tel. contacto", key: "contactoTelefono", width: 14 },
+    { header: "Parentesco contacto", key: "contactoParentesco", width: 16 },
   ];
   wsPersonas.addRows(
     personas.map((p) => ({
@@ -93,8 +95,10 @@ export async function GET() {
       telefono: p.telefono,
       estadoPersona: p.estadoPersona,
       condicionSalud: p.condicionSalud,
+      descripcionFisica: p.descripcionFisica,
       contactoNombre: p.contactoNombre,
       contactoTelefono: p.contactoTelefono,
+      contactoParentesco: p.contactoParentesco,
     })),
   );
   estiloEncabezado(wsPersonas);

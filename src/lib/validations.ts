@@ -268,3 +268,27 @@ export const donationUpdateSchema = z.object({
   estado: estadoDonacionEnum.optional(),
   donationPointId: z.string().optional().nullable(),
 });
+
+// Reportar persona desaparecida (público)
+export const missingPersonCreateSchema = z.object({
+  incidentId: z.string().optional().nullable(),
+  nombreCompleto: z.string().min(3, "Indica el nombre completo de la persona"),
+  tipoDocumento: tipoDocumentoEnum.default("SIN_DOCUMENTO"),
+  numeroDocumento: z.string().optional().nullable(),
+  edad: z.coerce.number().int().min(0).max(130).optional().nullable(),
+  sexo: sexoEnum.default("NO_INFORMA"),
+  descripcionFisica: z.string().optional().nullable(),
+  fechaVisto: z.coerce.date().optional(),
+
+  direccion: z.string().min(3, "Indica dónde fue visto por última vez"),
+  municipio: z.string().min(2, "El municipio es obligatorio"),
+  departamento: z.string().min(2, "El departamento es obligatorio"),
+  latitud: z.coerce.number().min(-90).max(90),
+  longitud: z.coerce.number().min(-180).max(180),
+
+  contactoNombre: z.string().min(3, "Indica el nombre de la persona de contacto"),
+  contactoTelefono: z.string().min(7, "Indica un teléfono de contacto"),
+  contactoParentesco: z.string().optional().nullable(),
+
+  foto: z.string().url().optional().nullable(),
+});

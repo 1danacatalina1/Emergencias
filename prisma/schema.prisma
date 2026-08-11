@@ -235,6 +235,7 @@ model Person {
 
   estadoPersona       EstadoPersona @default(DESAPARECIDA)
   condicionSalud      String?
+  descripcionFisica   String?
   direccionResidencia String?
 
   contactoNombre     String?
@@ -250,6 +251,7 @@ model Person {
   updatedAt DateTime @updatedAt
 
   traslados Transfer[]
+  adjuntos  Attachment[]
 
   @@index([incidentId])
   @@index([estadoPersona])
@@ -340,12 +342,15 @@ model Attachment {
   id            String   @id @default(cuid())
   incidentId    String
   incident      Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  personId      String?
+  person        Person?  @relation(fields: [personId], references: [id], onDelete: Cascade)
   url           String
   nombreArchivo String?
   tipoMime      String?
   createdAt     DateTime @default(now())
 
   @@index([incidentId])
+  @@index([personId])
   @@map("attachments")
 }
 
