@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { puedeAuditarYExportar } from "@/lib/permisos";
+import { puedeAuditarYExportar, puedeGestionarIntegraciones } from "@/lib/permisos";
 
 const ENLACES_BASE = [
   { href: "/panel", label: "Inicio", icono: "📊" },
@@ -17,10 +17,12 @@ const ENLACES_BASE = [
 ];
 
 const ENLACE_AUDITORIA = { href: "/panel/auditoria", label: "Auditoría", icono: "🕵️" };
+const ENLACE_INTEGRACIONES = { href: "/panel/integraciones", label: "Integraciones", icono: "🔌" };
 
 export default function NavPanel({ usuario }: { usuario: { name: string; role: string } }) {
   const pathname = usePathname();
-  const ENLACES = puedeAuditarYExportar(usuario.role) ? [...ENLACES_BASE, ENLACE_AUDITORIA] : ENLACES_BASE;
+  let ENLACES = puedeAuditarYExportar(usuario.role) ? [...ENLACES_BASE, ENLACE_AUDITORIA] : ENLACES_BASE;
+  if (puedeGestionarIntegraciones(usuario.role)) ENLACES = [...ENLACES, ENLACE_INTEGRACIONES];
 
   return (
     <>

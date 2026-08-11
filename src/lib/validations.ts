@@ -355,6 +355,12 @@ export const petCreateSchema = z.object({
   fotoUrl: fotoUrlSchema.optional().nullable(),
 });
 
+// Llaves de API para integración externa (panel, solo Administrador)
+export const apiKeyCreateSchema = z.object({
+  nombre: z.string().min(3, "Indica para quién o qué es esta llave").max(NOMBRE_MAX),
+  expiraEn: z.coerce.date().optional().nullable(),
+});
+
 export const petUpdateSchema = z.object({
   especie: especieMascotaEnum.optional(),
   nombre: z.string().max(NOMBRE_MAX).optional().nullable(),

@@ -20,3 +20,8 @@ export function puedeEliminar(rol?: string | null): boolean {
 export function puedeAuditarYExportar(rol?: string | null): boolean {
   return rol === "ADMIN" || rol === "COORDINADOR";
 }
+
+/** Emitir o revocar credenciales de integración (tokens de API) es exclusivo del Administrador. */
+export function puedeGestionarIntegraciones(rol?: string | null): boolean {
+  return rol === "ADMIN";
+}

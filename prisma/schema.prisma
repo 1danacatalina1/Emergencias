@@ -46,6 +46,7 @@ model User {
   donationsUpdated      Donation[]      @relation("DonationUpdatedBy")
   petsCreated           Pet[]           @relation("PetCreatedBy")
   petsUpdated           Pet[]           @relation("PetUpdatedBy")
+  apiKeysCreados        ApiKey[]        @relation("ApiKeyCreatedBy")
   auditLogs             AuditLog[]
 
   @@map("users")
@@ -498,6 +499,27 @@ model Pet {
   @@index([estado])
   @@index([municipio])
   @@map("pets")
+}
+
+// ---------------------------------------------------------------------------
+// Llaves de API para integración externa (p. ej. la UNGRD consumiendo datos
+// en vivo mediante /api/external/v1). Nunca se guarda la llave en texto
+// plano, solo su hash; el prefijo permite ubicarla sin poder reconstruirla.
+// ---------------------------------------------------------------------------
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  nombre      String
+  prefijo     String    @unique
+  llaveHash   String
+  activa      Boolean   @default(true)
+  creadoPorId String?
+  creadoPor   User?     @relation("ApiKeyCreatedBy", fields: [creadoPorId], references: [id])
+  ultimoUsoEn DateTime?
+  expiraEn    DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@map("api_keys")
 }
 
 // ---------------------------------------------------------------------------
