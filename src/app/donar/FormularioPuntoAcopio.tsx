@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Boton, Campo, AreaTexto, Etiqueta, ErrorCampo, Tarjeta } from "@/components/ui/campos";
 import SelectorUbicacion from "@/components/mapa/SelectorUbicacionDinamico";
 import { TIPOS_AYUDA } from "@/lib/catalogos";
+import { CheckboxPrivacidad } from "@/components/AvisoPrivacidad";
 
 export default function FormularioPuntoAcopio({ onCreado }: { onCreado?: () => void }) {
   const [nombre, setNombre] = useState("");
@@ -18,6 +19,7 @@ export default function FormularioPuntoAcopio({ onCreado }: { onCreado?: () => v
   const [responsable, setResponsable] = useState("");
   const [telefonoContacto, setTelefonoContacto] = useState("");
   const [horario, setHorario] = useState("");
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
 
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -175,7 +177,9 @@ export default function FormularioPuntoAcopio({ onCreado }: { onCreado?: () => v
         </div>
       </Tarjeta>
 
-      <Boton type="submit" variante="primario" disabled={enviando}>
+      <CheckboxPrivacidad checked={aceptaPrivacidad} onChange={setAceptaPrivacidad} />
+
+      <Boton type="submit" variante="primario" disabled={enviando || !aceptaPrivacidad}>
         {enviando ? "Enviando…" : "Registrar punto de acopio"}
       </Boton>
     </form>

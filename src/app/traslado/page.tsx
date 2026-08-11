@@ -5,6 +5,7 @@ import Link from "next/link";
 import { EncabezadoPagina } from "@/components/EncabezadoPagina";
 import { Boton, Campo, AreaTexto, Seleccion, Etiqueta, ErrorCampo, Tarjeta } from "@/components/ui/campos";
 import SelectorUbicacion from "@/components/mapa/SelectorUbicacionDinamico";
+import { CheckboxPrivacidad } from "@/components/AvisoPrivacidad";
 
 export default function ReportarTrasladoPage() {
   const [nombrePersona, setNombrePersona] = useState("");
@@ -24,6 +25,7 @@ export default function ReportarTrasladoPage() {
   const [lng, setLng] = useState<number | null>(null);
   const [reporteroNombre, setReporteroNombre] = useState("");
   const [reporteroTelefono, setReporteroTelefono] = useState("");
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
 
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -211,7 +213,9 @@ export default function ReportarTrasladoPage() {
             </div>
           </Tarjeta>
 
-          <Boton type="submit" variante="emergencia" disabled={enviando}>
+          <CheckboxPrivacidad checked={aceptaPrivacidad} onChange={setAceptaPrivacidad} />
+
+          <Boton type="submit" variante="emergencia" disabled={enviando || !aceptaPrivacidad}>
             {enviando ? "Enviando…" : "Registrar traslado"}
           </Boton>
         </form>

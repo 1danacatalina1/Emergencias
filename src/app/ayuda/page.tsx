@@ -6,6 +6,7 @@ import { EncabezadoPagina } from "@/components/EncabezadoPagina";
 import { Boton, Campo, AreaTexto, Seleccion, Etiqueta, ErrorCampo, Tarjeta } from "@/components/ui/campos";
 import SelectorUbicacion from "@/components/mapa/SelectorUbicacionDinamico";
 import { TIPOS_AYUDA } from "@/lib/catalogos";
+import { CheckboxPrivacidad } from "@/components/AvisoPrivacidad";
 
 export default function SolicitarAyudaPage() {
   const [nombreSolicitante, setNombreSolicitante] = useState("");
@@ -19,6 +20,7 @@ export default function SolicitarAyudaPage() {
   const [departamento, setDepartamento] = useState("");
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
 
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -170,7 +172,9 @@ export default function SolicitarAyudaPage() {
             </div>
           </Tarjeta>
 
-          <Boton type="submit" variante="primario" disabled={enviando}>
+          <CheckboxPrivacidad checked={aceptaPrivacidad} onChange={setAceptaPrivacidad} />
+
+          <Boton type="submit" variante="primario" disabled={enviando || !aceptaPrivacidad}>
             {enviando ? "Enviando…" : "Enviar solicitud de ayuda"}
           </Boton>
         </form>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Boton, Campo, AreaTexto, Seleccion, Etiqueta, ErrorCampo, Tarjeta } from "@/components/ui/campos";
 import { TIPOS_AYUDA } from "@/lib/catalogos";
+import { CheckboxPrivacidad } from "@/components/AvisoPrivacidad";
 
 interface PuntoOpcion {
   id: string;
@@ -21,6 +22,7 @@ export default function FormularioDonacion() {
   const [municipio, setMunicipio] = useState("");
   const [departamento, setDepartamento] = useState("");
   const [direccion, setDireccion] = useState("");
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
 
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -159,7 +161,9 @@ export default function FormularioDonacion() {
         </div>
       </Tarjeta>
 
-      <Boton type="submit" variante="primario" disabled={enviando}>
+      <CheckboxPrivacidad checked={aceptaPrivacidad} onChange={setAceptaPrivacidad} />
+
+      <Boton type="submit" variante="primario" disabled={enviando || !aceptaPrivacidad}>
         {enviando ? "Enviando…" : "Registrar donación"}
       </Boton>
     </form>

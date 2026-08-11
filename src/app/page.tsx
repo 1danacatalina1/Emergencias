@@ -104,6 +104,9 @@ export default function Home() {
         <p className="mt-8 text-center text-xs text-muted">
           Si tu vida o la de alguien más está en peligro inmediato, comunícate primero con la línea de emergencias 123.
         </p>
+        <p className="mt-3 text-center text-xs text-muted">
+          <Link href="/privacidad" className="underline">Aviso de privacidad y tratamiento de datos personales</Link>
+        </p>
       </main>
     </div>
   );

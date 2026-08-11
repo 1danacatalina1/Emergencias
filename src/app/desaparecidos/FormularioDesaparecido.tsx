@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Boton, Campo, AreaTexto, Seleccion, Etiqueta, ErrorCampo, Tarjeta } from "@/components/ui/campos";
 import SelectorUbicacion from "@/components/mapa/SelectorUbicacionDinamico";
+import { CheckboxPrivacidad } from "@/components/AvisoPrivacidad";
 
 export default function FormularioDesaparecido({ onCreado }: { onCreado?: () => void }) {
   const [foto, setFoto] = useState<File | null>(null);
@@ -24,6 +25,7 @@ export default function FormularioDesaparecido({ onCreado }: { onCreado?: () => 
   const [contactoNombre, setContactoNombre] = useState("");
   const [contactoTelefono, setContactoTelefono] = useState("");
   const [contactoParentesco, setContactoParentesco] = useState("");
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
 
   const [enviando, setEnviando] = useState(false);
   const [subiendoFoto, setSubiendoFoto] = useState(false);
@@ -241,7 +243,9 @@ export default function FormularioDesaparecido({ onCreado }: { onCreado?: () => 
         </div>
       </Tarjeta>
 
-      <Boton type="submit" variante="emergencia" disabled={enviando || subiendoFoto}>
+      <CheckboxPrivacidad checked={aceptaPrivacidad} onChange={setAceptaPrivacidad} />
+
+      <Boton type="submit" variante="emergencia" disabled={enviando || subiendoFoto || !aceptaPrivacidad}>
         {subiendoFoto ? "Subiendo foto…" : enviando ? "Enviando…" : "Reportar persona desaparecida"}
       </Boton>
     </form>

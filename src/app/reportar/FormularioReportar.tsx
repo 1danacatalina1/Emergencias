@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Boton, Campo, AreaTexto, Seleccion, Etiqueta, ErrorCampo, Tarjeta } from "@/components/ui/campos";
 import SelectorUbicacion from "@/components/mapa/SelectorUbicacionDinamico";
+import { CheckboxPrivacidad } from "@/components/AvisoPrivacidad";
 
 interface Tipo {
   id: string;
@@ -44,6 +45,7 @@ export default function FormularioReportar({ tipos }: { tipos: Tipo[] }) {
   const [personas, setPersonas] = useState<PersonaForm[]>([]);
   const [fotos, setFotos] = useState<File[]>([]);
   const [subiendoFotos, setSubiendoFotos] = useState(false);
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
 
   const [enviando, setEnviando] = useState(false);
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -325,7 +327,9 @@ export default function FormularioReportar({ tipos }: { tipos: Tipo[] }) {
         )}
       </Tarjeta>
 
-      <Boton type="submit" variante="emergencia" disabled={enviando || subiendoFotos}>
+      <CheckboxPrivacidad checked={aceptaPrivacidad} onChange={setAceptaPrivacidad} />
+
+      <Boton type="submit" variante="emergencia" disabled={enviando || subiendoFotos || !aceptaPrivacidad}>
         {enviando ? "Enviando…" : subiendoFotos ? "Subiendo fotos…" : "Enviar reporte de emergencia"}
       </Boton>
     </form>

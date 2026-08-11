@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Boton, Campo, AreaTexto, Seleccion, Etiqueta, ErrorCampo, Tarjeta } from "@/components/ui/campos";
 import SelectorUbicacion from "@/components/mapa/SelectorUbicacionDinamico";
+import { CheckboxPrivacidad } from "@/components/AvisoPrivacidad";
 
 interface Props {
   tipo: "PERDIDA" | "ENCONTRADA";
@@ -26,6 +27,7 @@ export default function FormularioMascota({ tipo, onCreado }: Props) {
 
   const [contactoNombre, setContactoNombre] = useState("");
   const [contactoTelefono, setContactoTelefono] = useState("");
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
 
   const [enviando, setEnviando] = useState(false);
   const [subiendoFoto, setSubiendoFoto] = useState(false);
@@ -221,7 +223,9 @@ export default function FormularioMascota({ tipo, onCreado }: Props) {
         </div>
       </Tarjeta>
 
-      <Boton type="submit" variante={esPerdida ? "emergencia" : "primario"} disabled={enviando || subiendoFoto}>
+      <CheckboxPrivacidad checked={aceptaPrivacidad} onChange={setAceptaPrivacidad} />
+
+      <Boton type="submit" variante={esPerdida ? "emergencia" : "primario"} disabled={enviando || subiendoFoto || !aceptaPrivacidad}>
         {subiendoFoto ? "Subiendo foto…" : enviando ? "Enviando…" : esPerdida ? "Reportar mascota perdida" : "Reportar mascota encontrada"}
       </Boton>
     </form>
