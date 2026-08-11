@@ -58,7 +58,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="mx-auto -mt-4 w-full max-w-xl flex-1 px-4 pb-10">
+      <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-10 pt-5">
         <div className="flex flex-col gap-3">
           {ACCIONES.map((accion) => (
             <Link
