@@ -22,6 +22,16 @@ export async function GET(request: Request, { params }: Params) {
   if (!persona) {
     return NextResponse.json({ error: "Persona no encontrada" }, { status: 404 });
   }
+
+  await registrarAuditoria({
+    entidad: "Person",
+    entidadId: persona.id,
+    accion: "VER",
+    usuarioId: session.user.id,
+    usuarioNombre: session.user.name,
+    ip: obtenerIp(request),
+  });
+
   return NextResponse.json(persona);
 }
 

@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { registrarAuditoria } from "@/lib/audit";
 import IncidenteDetalle from "./IncidenteDetalle";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +9,8 @@ export const dynamic = "force-dynamic";
 export default async function IncidenteDetallePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [incident, tipos] = await Promise.all([
+  const [session, incident, tipos] = await Promise.all([
+    auth(),
     prisma.incident.findUnique({
       where: { id },
       include: {
@@ -23,6 +26,17 @@ export default async function IncidenteDetallePage({ params }: { params: Promise
   ]);
 
   if (!incident) notFound();
+
+  if (session?.user) {
+    await registrarAuditoria({
+      entidad: "Incident",
+      entidadId: incident.id,
+      accion: "VER",
+      usuarioId: session.user.id,
+      usuarioNombre: session.user.name,
+      cambios: { codigo: incident.codigo },
+    });
+  }
 
   return <IncidenteDetalle incident={JSON.parse(JSON.stringify(incident))} tipos={tipos.map((t) => ({ id: t.id, nombre: t.nombre }))} />;
 }

@@ -10,9 +10,15 @@ const ETIQUETAS_ACCION: Record<string, string> = {
   CREAR: "Creó",
   ACTUALIZAR: "Actualizó",
   ELIMINAR: "Eliminó",
-  LOGIN: "Inició sesión en",
+  LOGIN: "Inició sesión",
   EXPORTAR: "Exportó",
+  VER: "Consultó",
+  MFA_ACTIVADA: "Activó su verificación en dos pasos",
+  MFA_DESACTIVADA: "Desactivó su verificación en dos pasos",
 };
+
+// Acciones referidas al propio usuario: no tiene sentido mostrar "en User #..."
+const ACCIONES_SIN_ENTIDAD = new Set(["LOGIN", "MFA_ACTIVADA", "MFA_DESACTIVADA"]);
 
 export default async function AuditoriaPage() {
   const session = await auth();
@@ -46,8 +52,12 @@ export default async function AuditoriaPage() {
             <p className="text-sm">
               <span className="font-bold">{log.usuarioNombre ?? "Anónimo"}</span>{" "}
               {ETIQUETAS_ACCION[log.accion] ?? log.accion}{" "}
-              <span className="font-semibold">{log.entidad}</span>{" "}
-              <span className="font-mono text-xs text-muted">#{log.entidadId.slice(0, 8)}</span>
+              {!ACCIONES_SIN_ENTIDAD.has(log.accion) && (
+                <>
+                  <span className="font-semibold">{log.entidad}</span>{" "}
+                  <span className="font-mono text-xs text-muted">#{log.entidadId.slice(0, 8)}</span>
+                </>
+              )}
             </p>
             <p className="mt-1 text-xs text-muted">{formatearFechaHora(log.createdAt)} {log.ip && `· ${log.ip}`}</p>
           </Tarjeta>

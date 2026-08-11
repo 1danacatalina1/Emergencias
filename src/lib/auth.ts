@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
 import { authConfig } from "@/lib/auth.config";
 import { verificarCodigoTotp } from "@/lib/totp";
+import { registrarAuditoria } from "@/lib/audit";
 
 class MfaRequerido extends CredentialsSignin {
   code = "mfa_requerido";
@@ -86,6 +87,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = token.role as string;
       }
       return session;
+    },
+  },
+  events: {
+    signIn: async ({ user }) => {
+      if (!user.id) return;
+      await registrarAuditoria({
+        entidad: "User",
+        entidadId: user.id,
+        accion: "LOGIN",
+        usuarioId: user.id,
+        usuarioNombre: user.name,
+      });
     },
   },
 });

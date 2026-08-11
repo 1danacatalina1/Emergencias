@@ -159,6 +159,7 @@ enum AccionAuditoria {
   EXPORTAR
   MFA_ACTIVADA
   MFA_DESACTIVADA
+  VER
 }
 
 enum EstadoPuntoAcopio {
