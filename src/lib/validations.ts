@@ -212,6 +212,15 @@ export const aidRequestUpdateSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email("Correo inválido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+  totpCode: z.string().optional(),
+});
+
+export const totpVerifySchema = z.object({
+  code: z.string().regex(/^\d{6}$/, "El código debe tener 6 dígitos"),
+});
+
+export const totpDisableSchema = z.object({
+  password: z.string().min(1, "Ingresa tu contraseña actual"),
 });
 
 // Puntos de acopio de donaciones (público)

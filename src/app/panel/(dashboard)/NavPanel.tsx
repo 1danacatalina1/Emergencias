@@ -13,6 +13,7 @@ const ENLACES_BASE = [
   { href: "/panel/ayudas", label: "Ayudas", icono: "🏠" },
   { href: "/panel/donaciones", label: "Donaciones", icono: "🎁" },
   { href: "/panel/mascotas", label: "Mascotas", icono: "🐾" },
+  { href: "/panel/seguridad", label: "Seguridad", icono: "🔒" },
 ];
 
 const ENLACE_AUDITORIA = { href: "/panel/auditoria", label: "Auditoría", icono: "🕵️" };

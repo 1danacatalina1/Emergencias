@@ -31,6 +31,10 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
+  totpSecret       String?
+  totpEnabled      Boolean  @default(false)
+  totpBackupCodes  String[] @default([])
+
   incidentsCreated      Incident[]      @relation("IncidentCreatedBy")
   incidentsUpdated      Incident[]      @relation("IncidentUpdatedBy")
   personsCreated        Person[]        @relation("PersonCreatedBy")
@@ -153,6 +157,8 @@ enum AccionAuditoria {
   ELIMINAR
   LOGIN
   EXPORTAR
+  MFA_ACTIVADA
+  MFA_DESACTIVADA
 }
 
 enum EstadoPuntoAcopio {

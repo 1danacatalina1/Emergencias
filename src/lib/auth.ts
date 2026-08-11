@@ -1,9 +1,18 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
 import { authConfig } from "@/lib/auth.config";
+import { verificarCodigoTotp } from "@/lib/totp";
+
+class MfaRequerido extends CredentialsSignin {
+  code = "mfa_requerido";
+}
+
+class MfaInvalido extends CredentialsSignin {
+  code = "mfa_invalido";
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -14,6 +23,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Correo", type: "email" },
         password: { label: "Contraseña", type: "password" },
+        totpCode: { label: "Código de verificación", type: "text" },
       },
       authorize: async (credentials) => {
         const parsed = loginSchema.safeParse(credentials);
@@ -26,6 +36,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const valido = await bcrypt.compare(parsed.data.password, user.passwordHash);
         if (!valido) return null;
+
+        if (user.totpEnabled) {
+          const codigo = parsed.data.totpCode?.trim();
+          if (!codigo) throw new MfaRequerido();
+
+          let autenticado2FA = false;
+
+          if (/^\d{6}$/.test(codigo)) {
+            autenticado2FA = user.totpSecret ? await verificarCodigoTotp(user.totpSecret, codigo) : false;
+          } else {
+            const normalizado = codigo.toUpperCase();
+            for (const hash of user.totpBackupCodes) {
+              if (await bcrypt.compare(normalizado, hash)) {
+                autenticado2FA = true;
+                await prisma.user.update({
+                  where: { id: user.id },
+                  data: { totpBackupCodes: user.totpBackupCodes.filter((h) => h !== hash) },
+                });
+                break;
+              }
+            }
+          }
+
+          if (!autenticado2FA) throw new MfaInvalido();
+        }
 
         return {
           id: user.id,

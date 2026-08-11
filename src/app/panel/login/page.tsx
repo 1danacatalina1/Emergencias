@@ -13,6 +13,8 @@ function FormularioLogin() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [requiereMfa, setRequiereMfa] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,10 +23,18 @@ function FormularioLogin() {
     setEnviando(true);
     setError(null);
 
-    const res = await signIn("credentials", { email, password, redirect: false });
+    const res = await signIn("credentials", { email, password, totpCode, redirect: false });
 
     if (res?.error) {
-      setError("Correo o contraseña incorrectos.");
+      if (res.code === "mfa_requerido") {
+        setRequiereMfa(true);
+        setError(null);
+      } else if (res.code === "mfa_invalido") {
+        setRequiereMfa(true);
+        setError("El código de verificación no es correcto. Inténtalo de nuevo.");
+      } else {
+        setError("Correo o contraseña incorrectos.");
+      }
       setEnviando(false);
       return;
     }
@@ -44,17 +54,49 @@ function FormularioLogin() {
         <Tarjeta className="p-5">
           <form onSubmit={enviar} className="flex flex-col gap-4">
             {error && <div className="rounded-xl bg-red-50 p-3 text-sm font-medium text-emergency">{error}</div>}
-            <div>
-              <Etiqueta htmlFor="email">Correo electrónico</Etiqueta>
-              <Campo id="email" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </div>
-            <div>
-              <Etiqueta htmlFor="password">Contraseña</Etiqueta>
-              <Campo id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-              <ErrorCampo />
-            </div>
+            {!requiereMfa && (
+              <>
+                <div>
+                  <Etiqueta htmlFor="email">Correo electrónico</Etiqueta>
+                  <Campo id="email" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div>
+                  <Etiqueta htmlFor="password">Contraseña</Etiqueta>
+                  <Campo id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                  <ErrorCampo />
+                </div>
+              </>
+            )}
+            {requiereMfa && (
+              <div>
+                <Etiqueta htmlFor="totpCode">Código de verificación</Etiqueta>
+                <p className="mb-2 text-sm text-muted">
+                  Ingresa el código de 6 dígitos de tu app de autenticación, o uno de tus códigos de respaldo.
+                </p>
+                <Campo
+                  id="totpCode"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value)}
+                  placeholder="000000"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRequiereMfa(false);
+                    setTotpCode("");
+                    setError(null);
+                  }}
+                  className="mt-2 text-sm font-medium text-primary"
+                >
+                  ← Usar otra cuenta
+                </button>
+              </div>
+            )}
             <Boton type="submit" variante="primario" disabled={enviando}>
-              {enviando ? "Ingresando…" : "Ingresar"}
+              {enviando ? "Ingresando…" : requiereMfa ? "Verificar" : "Ingresar"}
             </Boton>
           </form>
         </Tarjeta>
