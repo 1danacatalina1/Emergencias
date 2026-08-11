@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Tarjeta, Seleccion } from "@/components/ui/campos";
 import { InsigniaEstado } from "@/components/ui/insignias";
+import BotonEliminar from "@/components/ui/BotonEliminar";
 
 const ESTADOS = ["SOLICITADO", "EN_RUTA", "TRASLADADO", "ATENDIDO_EN_CENTRO", "CANCELADO"];
 
@@ -17,7 +18,7 @@ interface Traslado {
   incident: { id: string; codigo: string; municipio: string } | null;
 }
 
-export default function TrasladosLista({ traslados }: { traslados: Traslado[] }) {
+export default function TrasladosLista({ traslados, puedeEliminar }: { traslados: Traslado[]; puedeEliminar: boolean }) {
   const [lista, setLista] = useState(traslados);
 
   async function cambiarEstado(id: string, estadoTraslado: string) {
@@ -47,6 +48,13 @@ export default function TrasladosLista({ traslados }: { traslados: Traslado[] })
             <Seleccion value={t.estadoTraslado} onChange={(e) => cambiarEstado(t.id, e.target.value)} className="w-auto py-1.5 text-xs">
               {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
             </Seleccion>
+            {puedeEliminar && (
+              <BotonEliminar
+                endpoint={`/api/transfers/${t.id}`}
+                mensajeConfirmacion="¿Eliminar este traslado de forma definitiva? Esta acción no se puede deshacer."
+                onEliminado={() => setLista((prev) => prev.filter((x) => x.id !== t.id))}
+              />
+            )}
           </div>
         </Tarjeta>
       ))}

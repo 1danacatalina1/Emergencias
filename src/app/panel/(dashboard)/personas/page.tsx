@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { puedeEliminar } from "@/lib/permisos";
 import { Campo, Seleccion } from "@/components/ui/campos";
 import PersonasLista from "./PersonasLista";
 
@@ -12,6 +14,7 @@ export default async function PersonasPage({
   searchParams: Promise<{ estadoPersona?: string; q?: string }>;
 }) {
   const { estadoPersona, q } = await searchParams;
+  const session = await auth();
 
   const personas = await prisma.person.findMany({
     where: {
@@ -41,7 +44,7 @@ export default async function PersonasPage({
           Filtrar
         </button>
       </form>
-      <PersonasLista personas={JSON.parse(JSON.stringify(personas))} />
+      <PersonasLista personas={JSON.parse(JSON.stringify(personas))} puedeEliminar={puedeEliminar(session?.user?.role)} />
     </div>
   );
 }

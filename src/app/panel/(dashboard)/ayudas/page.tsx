@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { puedeEliminar } from "@/lib/permisos";
 import { Seleccion } from "@/components/ui/campos";
 import AyudasLista from "./AyudasLista";
 
@@ -12,6 +14,7 @@ export default async function AyudasPage({
   searchParams: Promise<{ estado?: string }>;
 }) {
   const { estado } = await searchParams;
+  const session = await auth();
 
   const ayudas = await prisma.aidRequest.findMany({
     where: { estado: estado ? (estado as never) : undefined },
@@ -32,7 +35,7 @@ export default async function AyudasPage({
           Filtrar
         </button>
       </form>
-      <AyudasLista ayudas={JSON.parse(JSON.stringify(ayudas))} />
+      <AyudasLista ayudas={JSON.parse(JSON.stringify(ayudas))} puedeEliminar={puedeEliminar(session?.user?.role)} />
     </div>
   );
 }

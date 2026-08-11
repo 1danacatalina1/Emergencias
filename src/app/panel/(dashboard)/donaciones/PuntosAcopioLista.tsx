@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Tarjeta, Seleccion } from "@/components/ui/campos";
 import { InsigniaEstado } from "@/components/ui/insignias";
+import BotonEliminar from "@/components/ui/BotonEliminar";
 
 const ESTADOS = ["ACTIVO", "PAUSADO", "CERRADO"];
 
@@ -17,7 +18,7 @@ interface Punto {
   estado: string;
 }
 
-export default function PuntosAcopioLista({ puntos }: { puntos: Punto[] }) {
+export default function PuntosAcopioLista({ puntos, puedeEliminar }: { puntos: Punto[]; puedeEliminar: boolean }) {
   const [lista, setLista] = useState(puntos);
 
   async function cambiarEstado(id: string, estado: string) {
@@ -48,6 +49,13 @@ export default function PuntosAcopioLista({ puntos }: { puntos: Punto[] }) {
             <Seleccion value={p.estado} onChange={(e) => cambiarEstado(p.id, e.target.value)} className="w-auto py-1.5 text-xs">
               {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
             </Seleccion>
+            {puedeEliminar && (
+              <BotonEliminar
+                endpoint={`/api/donation-points/${p.id}`}
+                mensajeConfirmacion="¿Eliminar este punto de acopio de forma definitiva? Esta acción no se puede deshacer."
+                onEliminado={() => setLista((prev) => prev.filter((x) => x.id !== p.id))}
+              />
+            )}
           </div>
         </Tarjeta>
       ))}

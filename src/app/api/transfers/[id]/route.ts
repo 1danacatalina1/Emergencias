@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { transferUpdateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
-import { puedeEscribir } from "@/lib/permisos";
+import { puedeEscribir, puedeEliminar } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -66,4 +66,32 @@ export async function PATCH(request: Request, { params }: Params) {
   });
 
   return NextResponse.json(traslado);
+}
+
+export async function DELETE(request: Request, { params }: Params) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+  if (!puedeEliminar(session.user.role)) {
+    return NextResponse.json({ error: "Tu rol no tiene permiso para eliminar traslados" }, { status: 403 });
+  }
+  const { id } = await params;
+  const existente = await prisma.transfer.findUnique({ where: { id } });
+  if (!existente) {
+    return NextResponse.json({ error: "Traslado no encontrado" }, { status: 404 });
+  }
+  await prisma.transfer.delete({ where: { id } });
+
+  await registrarAuditoria({
+    entidad: "Transfer",
+    entidadId: id,
+    accion: "ELIMINAR",
+    usuarioId: session.user.id,
+    usuarioNombre: session.user.name,
+    cambios: { centroMedico: existente.centroMedico },
+    ip: obtenerIp(request),
+  });
+
+  return NextResponse.json({ ok: true });
 }

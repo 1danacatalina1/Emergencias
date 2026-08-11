@@ -7,6 +7,7 @@ import { Boton, Campo, Seleccion, Etiqueta, Tarjeta } from "@/components/ui/camp
 import { formatearFechaHora } from "@/lib/fecha";
 import { InsigniaEstado, InsigniaPrioridad } from "@/components/ui/insignias";
 import SelectorUbicacion from "@/components/mapa/SelectorUbicacionDinamico";
+import BotonEliminar from "@/components/ui/BotonEliminar";
 
 interface Persona {
   id: string;
@@ -78,7 +79,15 @@ const PERSONA_VACIA = {
   estadoPersona: "DESAPARECIDA",
 };
 
-export default function IncidenteDetalle({ incident, tipos }: { incident: Incident; tipos: { id: string; nombre: string }[] }) {
+export default function IncidenteDetalle({
+  incident,
+  tipos,
+  puedeEliminar,
+}: {
+  incident: Incident;
+  tipos: { id: string; nombre: string }[];
+  puedeEliminar: boolean;
+}) {
   const router = useRouter();
   const [estado, setEstado] = useState(incident.estado);
   const [nivelPrioridad, setNivelPrioridad] = useState(incident.nivelPrioridad);
@@ -86,6 +95,7 @@ export default function IncidenteDetalle({ incident, tipos }: { incident: Incide
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
+  const [personas, setPersonas] = useState(incident.personas);
   const [mostrarFormPersona, setMostrarFormPersona] = useState(false);
   const [nuevaPersona, setNuevaPersona] = useState({ ...PERSONA_VACIA });
   const [guardandoPersona, setGuardandoPersona] = useState(false);
@@ -128,13 +138,15 @@ export default function IncidenteDetalle({ incident, tipos }: { incident: Incide
     });
     setGuardandoPersona(false);
     if (res.ok) {
+      const creada = await res.json();
+      setPersonas((prev) => [{ ...creada, traslados: [] }, ...prev]);
       setNuevaPersona({ ...PERSONA_VACIA });
       setMostrarFormPersona(false);
-      router.refresh();
     }
   }
 
   async function actualizarEstadoPersona(personaId: string, nuevoEstado: string) {
+    setPersonas((prev) => prev.map((p) => (p.id === personaId ? { ...p, estadoPersona: nuevoEstado } : p)));
     await fetch(`/api/persons/${personaId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -153,9 +165,16 @@ export default function IncidenteDetalle({ incident, tipos }: { incident: Incide
           <h1 className="text-xl font-bold">{incident.incidentType?.nombre}{incident.subtipo ? ` — ${incident.subtipo}` : ""}</h1>
           <p className="text-sm text-muted">{incident.direccion}, {incident.municipio}, {incident.departamento}</p>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex items-center gap-1.5">
           <InsigniaPrioridad prioridad={nivelPrioridad} />
           <InsigniaEstado estado={estado} />
+          {puedeEliminar && (
+            <BotonEliminar
+              endpoint={`/api/incidents/${incident.id}`}
+              mensajeConfirmacion="¿Eliminar este reporte de forma definitiva, incluidas las personas, fotos y traslados asociados? Esta acción no se puede deshacer."
+              onEliminado={() => router.push("/panel/incidentes")}
+            />
+          )}
         </div>
       </div>
 
@@ -219,7 +238,7 @@ export default function IncidenteDetalle({ incident, tipos }: { incident: Incide
 
       <Tarjeta className="mt-4 p-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-bold">Personas relacionadas ({incident.personas.length})</h2>
+          <h2 className="font-bold">Personas relacionadas ({personas.length})</h2>
           <Boton type="button" variante="fantasma" className="w-auto px-3 py-1.5 text-sm" onClick={() => setMostrarFormPersona((v) => !v)}>
             {mostrarFormPersona ? "Cancelar" : "+ Añadir persona"}
           </Boton>
@@ -242,7 +261,7 @@ export default function IncidenteDetalle({ incident, tipos }: { incident: Incide
         )}
 
         <div className="mt-3 flex flex-col gap-2">
-          {incident.personas.map((p) => (
+          {personas.map((p) => (
             <div key={p.id} className="rounded-xl border border-border p-3">
               <div className="flex items-center justify-between gap-2">
                 <div>
@@ -252,20 +271,29 @@ export default function IncidenteDetalle({ incident, tipos }: { incident: Incide
                     {p.edad ? `${p.edad} años · ` : ""}{p.sexo}
                   </p>
                 </div>
-                <Seleccion
-                  value={p.estadoPersona}
-                  onChange={(e) => actualizarEstadoPersona(p.id, e.target.value)}
-                  className="w-auto py-1.5 text-xs"
-                >
-                  {ESTADOS_PERSONA.map((s) => <option key={s} value={s}>{s}</option>)}
-                </Seleccion>
+                <div className="flex items-center gap-1">
+                  <Seleccion
+                    value={p.estadoPersona}
+                    onChange={(e) => actualizarEstadoPersona(p.id, e.target.value)}
+                    className="w-auto py-1.5 text-xs"
+                  >
+                    {ESTADOS_PERSONA.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </Seleccion>
+                  {puedeEliminar && (
+                    <BotonEliminar
+                      endpoint={`/api/persons/${p.id}`}
+                      mensajeConfirmacion="¿Eliminar esta persona de forma definitiva, incluidas sus fotos? Esta acción no se puede deshacer."
+                      onEliminado={() => setPersonas((prev) => prev.filter((x) => x.id !== p.id))}
+                    />
+                  )}
+                </div>
               </div>
               {p.traslados.length > 0 && (
                 <p className="mt-1.5 text-xs text-muted">Traslados: {p.traslados.map((t) => `${t.centroMedico} (${t.estadoTraslado})`).join(", ")}</p>
               )}
             </div>
           ))}
-          {incident.personas.length === 0 && <p className="text-sm text-muted">Sin personas registradas.</p>}
+          {personas.length === 0 && <p className="text-sm text-muted">Sin personas registradas.</p>}
         </div>
       </Tarjeta>
 

@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { petUpdateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
 import { puedeEscribir, puedeEliminar } from "@/lib/permisos";
+import { eliminarArchivos } from "@/lib/blob";
 
 export const dynamic = "force-dynamic";
 
@@ -71,6 +72,7 @@ export async function DELETE(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Reporte no encontrado" }, { status: 404 });
   }
   await prisma.pet.delete({ where: { id } });
+  await eliminarArchivos([existente.fotoUrl]);
 
   await registrarAuditoria({
     entidad: "Pet",

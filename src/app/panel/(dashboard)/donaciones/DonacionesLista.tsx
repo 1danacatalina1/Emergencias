@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Tarjeta, Seleccion } from "@/components/ui/campos";
 import { InsigniaEstado } from "@/components/ui/insignias";
+import BotonEliminar from "@/components/ui/BotonEliminar";
 
 const ESTADOS = ["OFRECIDA", "CONFIRMADA", "RECIBIDA", "CANCELADA"];
 
@@ -18,7 +19,7 @@ interface Donacion {
   donationPoint: { id: string; codigo: string; nombre: string } | null;
 }
 
-export default function DonacionesLista({ donaciones }: { donaciones: Donacion[] }) {
+export default function DonacionesLista({ donaciones, puedeEliminar }: { donaciones: Donacion[]; puedeEliminar: boolean }) {
   const [lista, setLista] = useState(donaciones);
 
   async function cambiarEstado(id: string, estado: string) {
@@ -45,6 +46,13 @@ export default function DonacionesLista({ donaciones }: { donaciones: Donacion[]
             <Seleccion value={d.estado} onChange={(e) => cambiarEstado(d.id, e.target.value)} className="w-auto py-1.5 text-xs">
               {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
             </Seleccion>
+            {puedeEliminar && (
+              <BotonEliminar
+                endpoint={`/api/donations/${d.id}`}
+                mensajeConfirmacion="¿Eliminar esta donación de forma definitiva? Esta acción no se puede deshacer."
+                onEliminado={() => setLista((prev) => prev.filter((x) => x.id !== d.id))}
+              />
+            )}
           </div>
         </Tarjeta>
       ))}

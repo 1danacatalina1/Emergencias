@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Tarjeta, Seleccion } from "@/components/ui/campos";
 import { InsigniaEstado } from "@/components/ui/insignias";
+import BotonEliminar from "@/components/ui/BotonEliminar";
 
 const ESTADOS = ["DESAPARECIDA", "BUSQUEDA", "LOCALIZADA", "ILESA", "HERIDA", "ATRAPADA", "TRASLADADA", "FALLECIDA", "ATENDIDA"];
 
@@ -17,7 +18,7 @@ interface Persona {
   incident: { id: string; codigo: string; municipio: string } | null;
 }
 
-export default function PersonasLista({ personas }: { personas: Persona[] }) {
+export default function PersonasLista({ personas, puedeEliminar }: { personas: Persona[]; puedeEliminar: boolean }) {
   const [lista, setLista] = useState(personas);
 
   async function cambiarEstado(id: string, estadoPersona: string) {
@@ -53,6 +54,13 @@ export default function PersonasLista({ personas }: { personas: Persona[] }) {
             >
               {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
             </Seleccion>
+            {puedeEliminar && (
+              <BotonEliminar
+                endpoint={`/api/persons/${p.id}`}
+                mensajeConfirmacion="¿Eliminar esta persona de forma definitiva, incluidas sus fotos? Esta acción no se puede deshacer."
+                onEliminado={() => setLista((prev) => prev.filter((x) => x.id !== p.id))}
+              />
+            )}
           </div>
         </Tarjeta>
       ))}

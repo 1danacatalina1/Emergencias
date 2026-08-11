@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Tarjeta, Seleccion } from "@/components/ui/campos";
 import { InsigniaEstado } from "@/components/ui/insignias";
+import BotonEliminar from "@/components/ui/BotonEliminar";
 
 const ESTADOS = ["ACTIVO", "REUNIDO", "CERRADO"];
 
@@ -19,7 +20,7 @@ interface Mascota {
   estado: string;
 }
 
-export default function MascotasLista({ mascotas }: { mascotas: Mascota[] }) {
+export default function MascotasLista({ mascotas, puedeEliminar }: { mascotas: Mascota[]; puedeEliminar: boolean }) {
   const [lista, setLista] = useState(mascotas);
 
   async function cambiarEstado(id: string, estado: string) {
@@ -49,6 +50,13 @@ export default function MascotasLista({ mascotas }: { mascotas: Mascota[] }) {
             <Seleccion value={m.estado} onChange={(e) => cambiarEstado(m.id, e.target.value)} className="w-auto py-1.5 text-xs">
               {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
             </Seleccion>
+            {puedeEliminar && (
+              <BotonEliminar
+                endpoint={`/api/pets/${m.id}`}
+                mensajeConfirmacion="¿Eliminar este reporte de mascota de forma definitiva? Esta acción no se puede deshacer."
+                onEliminado={() => setLista((prev) => prev.filter((x) => x.id !== m.id))}
+              />
+            )}
           </div>
         </Tarjeta>
       ))}

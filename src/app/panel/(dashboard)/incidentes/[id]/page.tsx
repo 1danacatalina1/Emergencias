@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { registrarAuditoria } from "@/lib/audit";
+import { puedeEliminar } from "@/lib/permisos";
 import IncidenteDetalle from "./IncidenteDetalle";
 
 export const dynamic = "force-dynamic";
@@ -38,5 +39,11 @@ export default async function IncidenteDetallePage({ params }: { params: Promise
     });
   }
 
-  return <IncidenteDetalle incident={JSON.parse(JSON.stringify(incident))} tipos={tipos.map((t) => ({ id: t.id, nombre: t.nombre }))} />;
+  return (
+    <IncidenteDetalle
+      incident={JSON.parse(JSON.stringify(incident))}
+      tipos={tipos.map((t) => ({ id: t.id, nombre: t.nombre }))}
+      puedeEliminar={puedeEliminar(session?.user?.role)}
+    />
+  );
 }

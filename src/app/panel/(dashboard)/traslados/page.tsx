@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { puedeEliminar } from "@/lib/permisos";
 import { Seleccion } from "@/components/ui/campos";
 import TrasladosLista from "./TrasladosLista";
 
@@ -12,6 +14,7 @@ export default async function TrasladosPage({
   searchParams: Promise<{ estadoTraslado?: string }>;
 }) {
   const { estadoTraslado } = await searchParams;
+  const session = await auth();
 
   const traslados = await prisma.transfer.findMany({
     where: { estadoTraslado: estadoTraslado ? (estadoTraslado as never) : undefined },
@@ -32,7 +35,7 @@ export default async function TrasladosPage({
           Filtrar
         </button>
       </form>
-      <TrasladosLista traslados={JSON.parse(JSON.stringify(traslados))} />
+      <TrasladosLista traslados={JSON.parse(JSON.stringify(traslados))} puedeEliminar={puedeEliminar(session?.user?.role)} />
     </div>
   );
 }

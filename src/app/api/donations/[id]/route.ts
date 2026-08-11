@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { donationUpdateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
-import { puedeEscribir } from "@/lib/permisos";
+import { puedeEscribir, puedeEliminar } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -59,4 +59,32 @@ export async function PATCH(request: Request, { params }: Params) {
   });
 
   return NextResponse.json(donacion);
+}
+
+export async function DELETE(request: Request, { params }: Params) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+  if (!puedeEliminar(session.user.role)) {
+    return NextResponse.json({ error: "Tu rol no tiene permiso para eliminar donaciones" }, { status: 403 });
+  }
+  const { id } = await params;
+  const existente = await prisma.donation.findUnique({ where: { id } });
+  if (!existente) {
+    return NextResponse.json({ error: "Donación no encontrada" }, { status: 404 });
+  }
+  await prisma.donation.delete({ where: { id } });
+
+  await registrarAuditoria({
+    entidad: "Donation",
+    entidadId: id,
+    accion: "ELIMINAR",
+    usuarioId: session.user.id,
+    usuarioNombre: session.user.name,
+    cambios: { codigo: existente.codigo },
+    ip: obtenerIp(request),
+  });
+
+  return NextResponse.json({ ok: true });
 }

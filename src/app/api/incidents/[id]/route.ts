@@ -5,6 +5,7 @@ import { incidentUpdateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
 import { serializarIncidentPublico } from "@/lib/serializers";
 import { puedeEscribir, puedeEliminar } from "@/lib/permisos";
+import { eliminarArchivos } from "@/lib/blob";
 
 export const dynamic = "force-dynamic";
 
@@ -85,12 +86,21 @@ export async function DELETE(request: Request, { params }: Params) {
   }
 
   const { id } = await params;
-  const existente = await prisma.incident.findUnique({ where: { id } });
+  const existente = await prisma.incident.findUnique({
+    where: { id },
+    include: { adjuntos: true, personas: { include: { adjuntos: true } } },
+  });
   if (!existente) {
     return NextResponse.json({ error: "Incidente no encontrado" }, { status: 404 });
   }
 
+  const urlsArchivos = [
+    ...existente.adjuntos.map((a) => a.url),
+    ...existente.personas.flatMap((p) => p.adjuntos.map((a) => a.url)),
+  ];
+
   await prisma.incident.delete({ where: { id } });
+  await eliminarArchivos(urlsArchivos);
 
   await registrarAuditoria({
     entidad: "Incident",
@@ -98,7 +108,7 @@ export async function DELETE(request: Request, { params }: Params) {
     accion: "ELIMINAR",
     usuarioId: session.user.id,
     usuarioNombre: session.user.name,
-    cambios: { codigo: existente.codigo },
+    cambios: { codigo: existente.codigo, archivosEliminados: urlsArchivos.length },
     ip: obtenerIp(request),
   });
 

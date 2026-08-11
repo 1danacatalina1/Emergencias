@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { personUpdateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
 import { puedeEscribir, puedeEliminar } from "@/lib/permisos";
+import { eliminarArchivos } from "@/lib/blob";
 
 export const dynamic = "force-dynamic";
 
@@ -80,11 +81,15 @@ export async function DELETE(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Tu rol no tiene permiso para eliminar personas" }, { status: 403 });
   }
   const { id } = await params;
-  const existente = await prisma.person.findUnique({ where: { id } });
+  const existente = await prisma.person.findUnique({ where: { id }, include: { adjuntos: true } });
   if (!existente) {
     return NextResponse.json({ error: "Persona no encontrada" }, { status: 404 });
   }
+
+  const urlsArchivos = existente.adjuntos.map((a) => a.url);
+
   await prisma.person.delete({ where: { id } });
+  await eliminarArchivos(urlsArchivos);
 
   await registrarAuditoria({
     entidad: "Person",
@@ -92,7 +97,7 @@ export async function DELETE(request: Request, { params }: Params) {
     accion: "ELIMINAR",
     usuarioId: session.user.id,
     usuarioNombre: session.user.name,
-    cambios: { nombreCompleto: existente.nombreCompleto },
+    cambios: { nombreCompleto: existente.nombreCompleto, archivosEliminados: urlsArchivos.length },
     ip: obtenerIp(request),
   });
 
