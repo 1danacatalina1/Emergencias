@@ -51,6 +51,9 @@ const COLORES_ESTADO: Record<string, string> = {
   REUNIDO: "bg-emerald-100 text-emerald-800",
   PERDIDA: "bg-red-100 text-red-700",
   ENCONTRADA: "bg-emerald-100 text-emerald-800",
+  PREPARADO: "bg-blue-100 text-blue-800",
+  EN_TRANSITO: "bg-amber-100 text-amber-800",
+  ENTREGADO: "bg-emerald-100 text-emerald-800",
 };
 
 const ETIQUETAS: Record<string, string> = {
@@ -85,6 +88,9 @@ const ETIQUETAS: Record<string, string> = {
   REUNIDO: "Reunido con dueño",
   PERDIDA: "Perdida",
   ENCONTRADA: "Encontrada",
+  PREPARADO: "Preparado",
+  EN_TRANSITO: "En tránsito",
+  ENTREGADO: "Entregado",
 };
 
 export function InsigniaEstado({ estado }: { estado: string }) {

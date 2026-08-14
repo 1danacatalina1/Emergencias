@@ -379,7 +379,9 @@ export const donationCreateSchema = z.object({
   nombreDonante: z.string().min(3, "Indica tu nombre completo").max(NOMBRE_MAX),
   telefonoDonante: z.string().min(7, "Indica un teléfono de contacto").max(TELEFONO_MAX),
   tipoAyuda: tipoAyudaEnum.default("OTRO"),
-  descripcion: z.string().min(5, "Describe qué quieres donar (tipo y cantidad)").max(TEXTO_LARGO_MAX),
+  descripcion: z.string().min(5, "Describe qué quieres donar").max(TEXTO_LARGO_MAX),
+  cantidad: z.coerce.number().int().min(1).max(1_000_000).optional().nullable(),
+  unidad: z.string().max(NOMBRE_MAX).optional().nullable(),
   direccion: z.string().max(TEXTO_CORTO_MAX).optional().nullable(),
   municipio: z.string().min(2, "El municipio es obligatorio").max(NOMBRE_MAX),
   departamento: z.string().min(2, "El departamento es obligatorio").max(NOMBRE_MAX),
@@ -390,8 +392,40 @@ export const donationCreateSchema = z.object({
 export const donationUpdateSchema = z.object({
   tipoAyuda: tipoAyudaEnum.optional(),
   descripcion: z.string().min(5).max(TEXTO_LARGO_MAX).optional(),
+  cantidad: z.coerce.number().int().min(1).max(1_000_000).optional().nullable(),
+  unidad: z.string().max(NOMBRE_MAX).optional().nullable(),
   estado: estadoDonacionEnum.optional(),
   donationPointId: z.string().optional().nullable(),
+});
+
+// Envíos de insumos desde un punto de acopio (panel, requiere sesión)
+export const estadoEnvioEnum = z.enum(["PREPARADO", "EN_TRANSITO", "ENTREGADO"]);
+
+export const envioItemSchema = z.object({
+  insumo: z.string().min(1, "Indica el insumo").max(NOMBRE_MAX),
+  cantidad: z.coerce.number().int().min(1, "La cantidad debe ser al menos 1").max(1_000_000),
+  unidad: z.string().max(NOMBRE_MAX).optional().nullable(),
+});
+
+export const envioCreateSchema = z.object({
+  donationPointId: z.string().min(1, "Selecciona el punto de acopio de origen"),
+  destinatarioNombre: z.string().min(3, "Indica a quién se entrega la ayuda").max(NOMBRE_MAX),
+  destinatarioTelefono: z.string().max(TELEFONO_MAX).optional().nullable(),
+  destinoLugar: z.string().min(3, "Indica hacia dónde sale la ayuda").max(TEXTO_CORTO_MAX),
+  destinoMunicipio: z.string().max(NOMBRE_MAX).optional().nullable(),
+  destinoDepartamento: z.string().max(NOMBRE_MAX).optional().nullable(),
+  responsable: z.string().min(3, "Indica quién es responsable de estos insumos").max(NOMBRE_MAX),
+  responsableTelefono: z.string().max(TELEFONO_MAX).optional().nullable(),
+  vehiculo: z.string().max(NOMBRE_MAX).optional().nullable(),
+  vehiculoPlaca: z.string().max(20).optional().nullable(),
+  conductorNombre: z.string().max(NOMBRE_MAX).optional().nullable(),
+  conductorTelefono: z.string().max(TELEFONO_MAX).optional().nullable(),
+  notas: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
+  items: z.array(envioItemSchema).min(1, "Agrega al menos un insumo"),
+});
+
+export const envioUpdateSchema = z.object({
+  estado: estadoEnvioEnum.optional(),
 });
 
 // Reportar persona desaparecida (público)

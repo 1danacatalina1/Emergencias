@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Boton, Campo, AreaTexto, Seleccion, Etiqueta, ErrorCampo, Tarjeta } from "@/components/ui/campos";
-import { TIPOS_AYUDA } from "@/lib/catalogos";
+import { TIPOS_AYUDA, UNIDADES_SUGERIDAS } from "@/lib/catalogos";
 import { CheckboxPrivacidad } from "@/components/AvisoPrivacidad";
 
 interface PuntoOpcion {
@@ -19,6 +19,8 @@ export default function FormularioDonacion() {
   const [telefonoDonante, setTelefonoDonante] = useState("");
   const [tipoAyuda, setTipoAyuda] = useState("ALIMENTOS");
   const [descripcion, setDescripcion] = useState("");
+  const [cantidad, setCantidad] = useState("");
+  const [unidad, setUnidad] = useState("");
   const [municipio, setMunicipio] = useState("");
   const [departamento, setDepartamento] = useState("");
   const [direccion, setDireccion] = useState("");
@@ -51,6 +53,8 @@ export default function FormularioDonacion() {
           telefonoDonante,
           tipoAyuda,
           descripcion,
+          cantidad: cantidad || undefined,
+          unidad: unidad || undefined,
           direccion: direccion || undefined,
           municipio,
           departamento,
@@ -117,15 +121,30 @@ export default function FormularioDonacion() {
         </Seleccion>
 
         <div className="mt-4">
-          <Etiqueta htmlFor="descripcion">Descripción y cantidad *</Etiqueta>
+          <Etiqueta htmlFor="descripcion">Descripción *</Etiqueta>
           <AreaTexto
             id="descripcion"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
-            placeholder="Ej. 20 kg de arroz, 10 cobijas, 5 kits de aseo…"
+            placeholder="Ej. Arroz, cobijas, kits de aseo…"
             required
           />
           <ErrorCampo mensaje={errores.descripcion} />
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div>
+            <Etiqueta htmlFor="cantidad">Cantidad (opcional)</Etiqueta>
+            <Campo id="cantidad" type="number" min={1} value={cantidad} onChange={(e) => setCantidad(e.target.value)} placeholder="Ej. 20" />
+            <ErrorCampo mensaje={errores.cantidad} />
+          </div>
+          <div>
+            <Etiqueta htmlFor="unidad">Unidad (opcional)</Etiqueta>
+            <Campo id="unidad" list="unidades-donacion" value={unidad} onChange={(e) => setUnidad(e.target.value)} placeholder="kg, cajas…" />
+            <datalist id="unidades-donacion">
+              {UNIDADES_SUGERIDAS.map((u) => <option key={u} value={u} />)}
+            </datalist>
+          </div>
         </div>
 
         {puntos.length > 0 && (

@@ -57,6 +57,8 @@ export async function POST(request: Request) {
       telefonoDonante: data.telefonoDonante,
       tipoAyuda: data.tipoAyuda,
       descripcion: data.descripcion,
+      cantidad: data.cantidad ?? null,
+      unidad: data.unidad ?? null,
       direccion: data.direccion ?? null,
       municipio: data.municipio,
       departamento: data.departamento,

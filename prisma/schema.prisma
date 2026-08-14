@@ -83,6 +83,7 @@ model User {
   aidRequestsCreated    AidRequest[]      @relation("AidRequestCreatedBy")
   aidRequestsUpdated    AidRequest[]      @relation("AidRequestUpdatedBy")
   donationPointsCreated DonationPoint[]   @relation("DonationPointCreatedBy")
+  enviosCreados         Envio[]           @relation("EnvioCreatedBy")
   donationsCreated      Donation[]        @relation("DonationCreatedBy")
   donationsUpdated      Donation[]        @relation("DonationUpdatedBy")
   petsCreated           Pet[]             @relation("PetCreatedBy")
@@ -466,6 +467,7 @@ model DonationPoint {
   updatedAt DateTime @updatedAt
 
   donaciones Donation[]
+  envios     Envio[]
 
   @@index([estado])
   @@index([municipio])
@@ -487,6 +489,8 @@ model Donation {
   telefonoDonante String
   tipoAyuda       TipoAyuda @default(OTRO)
   descripcion     String
+  cantidad        Int?
+  unidad          String?
 
   direccion    String?
   municipio    String
@@ -508,6 +512,69 @@ model Donation {
   @@index([tipoAyuda])
   @@index([municipio])
   @@map("donations")
+}
+
+// ---------------------------------------------------------------------------
+// Envíos de insumos desde un punto de acopio hacia un destino
+// ---------------------------------------------------------------------------
+
+enum EstadoEnvio {
+  PREPARADO
+  EN_TRANSITO
+  ENTREGADO
+}
+
+model Envio {
+  id     String @id @default(cuid())
+  codigo String @unique
+
+  donationPointId String
+  donationPoint   DonationPoint @relation(fields: [donationPointId], references: [id])
+
+  destinatarioNombre   String
+  destinatarioTelefono String?
+
+  destinoLugar        String
+  destinoMunicipio    String?
+  destinoDepartamento String?
+
+  responsable         String
+  responsableTelefono String?
+
+  vehiculo          String?
+  vehiculoPlaca     String?
+  conductorNombre   String?
+  conductorTelefono String?
+
+  notas String?
+
+  estado EstadoEnvio @default(PREPARADO)
+
+  items EnvioItem[]
+
+  creadoPorId String?
+  creadoPor   User?   @relation("EnvioCreatedBy", fields: [creadoPorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([donationPointId])
+  @@index([estado])
+  @@map("envios")
+}
+
+model EnvioItem {
+  id String @id @default(cuid())
+
+  envioId String
+  envio   Envio  @relation(fields: [envioId], references: [id], onDelete: Cascade)
+
+  insumo   String
+  cantidad Int
+  unidad   String?
+
+  @@index([envioId])
+  @@map("envio_items")
 }
 
 // ---------------------------------------------------------------------------
