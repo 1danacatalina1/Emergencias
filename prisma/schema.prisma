@@ -95,6 +95,9 @@ model User {
   equipoComoCoordinador SeguimientoEquipo[] @relation("SeguimientoCoordinador")
   equipoComoVoluntario  SeguimientoEquipo[] @relation("SeguimientoVoluntario")
 
+  alertasSOS          AlertaSOS[] @relation("AlertaSOSAutor")
+  alertasSOSAtendidas AlertaSOS[] @relation("AlertaSOSAtendidaPor")
+
   @@index([estadoCuenta])
   @@map("users")
 }
@@ -621,6 +624,50 @@ model SeguimientoEquipo {
   @@unique([coordinadorId, voluntarioId])
   @@index([coordinadorId])
   @@map("seguimientos_equipo")
+}
+
+// ---------------------------------------------------------------------------
+// Alertas SOS: botón de pánico para los usuarios del panel en campo. Notifica
+// de inmediato a Administración y Coordinación (dentro de la plataforma y por
+// correo) cuando alguien necesita auxilio para sí mismo o por la labor que
+// está realizando.
+// ---------------------------------------------------------------------------
+
+enum TipoAlertaSOS {
+  PERSONAL
+  LABOR
+}
+
+enum EstadoAlertaSOS {
+  ACTIVA
+  ATENDIDA
+}
+
+model AlertaSOS {
+  id   String        @id @default(cuid())
+  tipo TipoAlertaSOS
+  nota String?
+
+  latitud  Float?
+  longitud Float?
+
+  estado EstadoAlertaSOS @default(ACTIVA)
+
+  autorId String
+  autor   User   @relation("AlertaSOSAutor", fields: [autorId], references: [id])
+
+  atendidaPorId String?
+  atendidaPor   User?     @relation("AlertaSOSAtendidaPor", fields: [atendidaPorId], references: [id])
+  atendidaEn    DateTime?
+
+  correoEnviado Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([autorId])
+  @@index([estado])
+  @@index([createdAt])
+  @@map("alertas_sos")
 }
 
 // ---------------------------------------------------------------------------

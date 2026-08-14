@@ -9,6 +9,7 @@ interface UbicacionContextValor {
   cargando: boolean;
   error: string | null;
   ultimaActualizacion: number | null;
+  posicion: { lat: number; lng: number } | null;
   activar: () => void;
   desactivar: () => void;
 }
@@ -25,15 +26,18 @@ async function enviarUbicacion(compartir: boolean, latitud?: number, longitud?: 
 
 export function UbicacionProvider({
   compartiendoInicial,
+  posicionInicial,
   children,
 }: {
   compartiendoInicial: boolean;
+  posicionInicial?: { lat: number; lng: number } | null;
   children: React.ReactNode;
 }) {
   const [compartiendo, setCompartiendo] = useState(compartiendoInicial);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ultimaActualizacion, setUltimaActualizacion] = useState<number | null>(null);
+  const [posicion, setPosicion] = useState<{ lat: number; lng: number } | null>(posicionInicial ?? null);
   const watchIdRef = useRef<number | null>(null);
   const ultimoEnvioRef = useRef(0);
 
@@ -48,6 +52,7 @@ export function UbicacionProvider({
     detenerSeguimiento();
     setCompartiendo(false);
     setUltimaActualizacion(null);
+    setPosicion(null);
     enviarUbicacion(false);
   }, [detenerSeguimiento]);
 
@@ -60,16 +65,18 @@ export function UbicacionProvider({
     setError(null);
 
     navigator.geolocation.getCurrentPosition(
-      async (posicion) => {
+      async (posicionInicialGeo) => {
         setCargando(false);
         setCompartiendo(true);
         setUltimaActualizacion(Date.now());
+        setPosicion({ lat: posicionInicialGeo.coords.latitude, lng: posicionInicialGeo.coords.longitude });
         ultimoEnvioRef.current = Date.now();
-        await enviarUbicacion(true, posicion.coords.latitude, posicion.coords.longitude);
+        await enviarUbicacion(true, posicionInicialGeo.coords.latitude, posicionInicialGeo.coords.longitude);
 
         watchIdRef.current = navigator.geolocation.watchPosition(
           (pos) => {
             const ahora = Date.now();
+            setPosicion({ lat: pos.coords.latitude, lng: pos.coords.longitude });
             if (ahora - ultimoEnvioRef.current < INTERVALO_MINIMO_MS) return;
             ultimoEnvioRef.current = ahora;
             setUltimaActualizacion(ahora);
@@ -90,7 +97,7 @@ export function UbicacionProvider({
   useEffect(() => detenerSeguimiento, [detenerSeguimiento]);
 
   return (
-    <UbicacionContext.Provider value={{ compartiendo, cargando, error, ultimaActualizacion, activar, desactivar }}>
+    <UbicacionContext.Provider value={{ compartiendo, cargando, error, ultimaActualizacion, posicion, activar, desactivar }}>
       {children}
     </UbicacionContext.Provider>
   );

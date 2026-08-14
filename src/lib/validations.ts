@@ -329,6 +329,16 @@ export const ubicacionUpdateSchema = z.object({
   longitud: z.coerce.number().min(-180).max(180).optional(),
 });
 
+// Alertas SOS (botón de pánico del panel)
+export const tipoAlertaSOSEnum = z.enum(["PERSONAL", "LABOR"]);
+
+export const alertaSOSCreateSchema = z.object({
+  tipo: tipoAlertaSOSEnum,
+  nota: z.string().max(TEXTO_CORTO_MAX).optional().nullable(),
+  latitud: z.coerce.number().min(-90).max(90).optional().nullable(),
+  longitud: z.coerce.number().min(-180).max(180).optional().nullable(),
+});
+
 // Puntos de acopio de donaciones (público)
 export const estadoPuntoAcopioEnum = z.enum(["ACTIVO", "PAUSADO", "CERRADO"]);
 

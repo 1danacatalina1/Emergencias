@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { puedeAuditarYExportar, puedeGestionarIntegraciones, puedeGestionarUsuarios, puedeVerEquipoDeCampo } from "@/lib/permisos";
+import BotonSOS from "@/components/sos/BotonSOS";
 
 const ENLACES_BASE = [
   { href: "/panel", label: "Inicio", icono: "📊" },
@@ -14,6 +15,7 @@ const ENLACES_BASE = [
   { href: "/panel/donaciones", label: "Donaciones", icono: "🎁" },
   { href: "/panel/mascotas", label: "Mascotas", icono: "🐾" },
   { href: "/panel/bitacora", label: "Bitácora de campo", icono: "📒" },
+  { href: "/panel/mi-ubicacion", label: "Mi ubicación", icono: "📍" },
   { href: "/panel/seguridad", label: "Seguridad", icono: "🔒" },
 ];
 
@@ -21,21 +23,37 @@ const ENLACE_AUDITORIA = { href: "/panel/auditoria", label: "Auditoría", icono:
 const ENLACE_INTEGRACIONES = { href: "/panel/integraciones", label: "Integraciones", icono: "🔌" };
 const ENLACE_USUARIOS = { href: "/panel/usuarios", label: "Usuarios", icono: "👥" };
 const ENLACE_MAPA_EQUIPO = { href: "/panel/mapa-equipo", label: "Mapa del equipo", icono: "🛰️" };
+const ENLACE_ALERTAS_SOS = { href: "/panel/sos", label: "Alertas SOS", icono: "🆘" };
+
+const ETIQUETAS_ROL: Record<string, string> = {
+  ADMIN: "Administrador",
+  COORDINADOR: "Coordinador",
+  OPERADOR: "Operador",
+  CONSULTA: "Consulta",
+};
 
 export default function NavPanel({ usuario }: { usuario: { name: string; role: string } }) {
   const pathname = usePathname();
   let ENLACES = puedeAuditarYExportar(usuario.role) ? [...ENLACES_BASE, ENLACE_AUDITORIA] : ENLACES_BASE;
-  if (puedeVerEquipoDeCampo(usuario.role)) ENLACES = [...ENLACES, ENLACE_MAPA_EQUIPO];
+  if (puedeVerEquipoDeCampo(usuario.role)) ENLACES = [...ENLACES, ENLACE_MAPA_EQUIPO, ENLACE_ALERTAS_SOS];
   if (puedeGestionarUsuarios(usuario.role)) ENLACES = [...ENLACES, ENLACE_USUARIOS];
   if (puedeGestionarIntegraciones(usuario.role)) ENLACES = [...ENLACES, ENLACE_INTEGRACIONES];
 
   return (
     <>
       <header className="flex items-center justify-between gap-3 bg-primary-dark px-4 py-3 text-white md:hidden">
-        <Link href="/panel" className="font-bold">📊 Panel de gestión</Link>
-        <button onClick={() => signOut({ callbackUrl: "/" })} className="text-sm font-medium text-white/80">
-          Salir
-        </button>
+        <div className="min-w-0">
+          <Link href="/panel" className="block truncate font-bold">📊 Panel de gestión</Link>
+          <p className="truncate text-xs text-white/70">
+            {usuario.name} · {ETIQUETAS_ROL[usuario.role] ?? usuario.role}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <BotonSOS />
+          <button onClick={() => signOut({ callbackUrl: "/" })} className="text-sm font-medium text-white/80">
+            Salir
+          </button>
+        </div>
       </header>
 
       <nav className="flex gap-1 overflow-x-auto border-b border-border bg-surface px-2 py-2 md:hidden">
@@ -54,7 +72,11 @@ export default function NavPanel({ usuario }: { usuario: { name: string; role: s
       </nav>
 
       <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-surface p-4 md:flex">
-        <Link href="/panel" className="mb-6 block text-lg font-bold text-primary">📊 Panel de gestión</Link>
+        <Link href="/panel" className="block text-lg font-bold text-primary">📊 Panel de gestión</Link>
+        <p className="mt-0.5 truncate text-sm font-semibold text-muted">
+          {usuario.name} · {ETIQUETAS_ROL[usuario.role] ?? usuario.role}
+        </p>
+        <BotonSOS className="mb-6 mt-3 w-full justify-center" />
         <nav className="flex flex-1 flex-col gap-1">
           {ENLACES.map((enlace) => (
             <Link
@@ -71,7 +93,7 @@ export default function NavPanel({ usuario }: { usuario: { name: string; role: s
         </nav>
         <div className="mt-6 border-t border-border pt-4">
           <p className="text-sm font-semibold">{usuario.name}</p>
-          <p className="text-xs text-muted">{usuario.role}</p>
+          <p className="text-xs text-muted">{ETIQUETAS_ROL[usuario.role] ?? usuario.role}</p>
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
             className="mt-3 w-full rounded-lg border border-border px-3 py-2 text-sm font-semibold text-emergency hover:bg-red-50"
