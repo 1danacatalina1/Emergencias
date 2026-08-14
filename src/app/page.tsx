@@ -2,6 +2,13 @@ import Link from "next/link";
 
 const ACCIONES = [
   {
+    href: "/panel/registro",
+    icono: "🧑‍🚒",
+    titulo: "Únete como colaborador",
+    descripcion: "Regístrate como rescatista, voluntario, coordinador, centro de acopio o entidad",
+    clase: "bg-slate-800 text-white",
+  },
+  {
     href: "/reportar",
     icono: "🆘",
     titulo: "Reportar emergencia",
@@ -42,13 +49,6 @@ const ACCIONES = [
     titulo: "Mascotas",
     descripcion: "Reporta una mascota perdida o avisa que encontraste una",
     clase: "bg-teal-700 text-white",
-  },
-  {
-    href: "/panel/registro",
-    icono: "🧑‍🚒",
-    titulo: "Únete como colaborador",
-    descripcion: "Regístrate como rescatista, voluntario, coordinador, centro de acopio o entidad",
-    clase: "bg-slate-800 text-white",
   },
   {
     href: "/mapa",
