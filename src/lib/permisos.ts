@@ -30,3 +30,12 @@ export function puedeGestionarIntegraciones(rol?: string | null): boolean {
 export function puedeGestionarUsuarios(rol?: string | null): boolean {
   return rol === "ADMIN";
 }
+
+/**
+ * Ver la bitácora de campo y la ubicación en tiempo real de todo el equipo es
+ * información sensible sobre el personal en terreno: reservada a quienes
+ * coordinan la respuesta, no a todos los perfiles con sesión.
+ */
+export function puedeVerEquipoDeCampo(rol?: string | null): boolean {
+  return rol === "ADMIN" || rol === "COORDINADOR";
+}

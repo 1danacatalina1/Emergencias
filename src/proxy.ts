@@ -10,7 +10,8 @@ export default auth(async (req) => {
   if (respuestaLimite) return respuestaLimite;
 
   const { pathname } = req.nextUrl;
-  const esRutaPanel = pathname.startsWith("/panel") && pathname !== "/panel/login";
+  const RUTAS_PANEL_PUBLICAS = new Set(["/panel/login", "/panel/registro"]);
+  const esRutaPanel = pathname.startsWith("/panel") && !RUTAS_PANEL_PUBLICAS.has(pathname);
   if (esRutaPanel && !req.auth?.user) {
     const signInUrl = req.nextUrl.clone();
     signInUrl.pathname = "/panel/login";
@@ -31,6 +32,7 @@ export const config = {
     "/api/pets",
     "/api/donations",
     "/api/donation-points",
+    "/api/registro",
     "/api/upload",
     "/api/auth/callback/credentials",
     "/api/external/:path*",

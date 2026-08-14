@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import SeguridadPanel from "./SeguridadPanel";
 import CambiarContrasenaPanel from "./CambiarContrasenaPanel";
+import UbicacionPanel from "./UbicacionPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export default async function SeguridadPage() {
       </p>
       <CambiarContrasenaPanel />
       <SeguridadPanel totpEnabledInicial={usuario.totpEnabled} email={usuario.email} />
+      <UbicacionPanel />
     </div>
   );
 }

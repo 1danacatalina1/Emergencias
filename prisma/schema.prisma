@@ -21,6 +21,21 @@ enum RolUsuario {
   CONSULTA
 }
 
+enum EstadoCuentaUsuario {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+enum TipoColaborador {
+  RESCATISTA
+  VOLUNTARIO
+  COORDINADOR_VOLUNTARIOS
+  CENTRO_ACOPIO
+  ENTIDAD
+  OTRO
+}
+
 model User {
   id           String     @id @default(cuid())
   name         String
@@ -31,24 +46,53 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  totpSecret       String?
-  totpEnabled      Boolean  @default(false)
-  totpBackupCodes  String[] @default([])
+  totpSecret      String?
+  totpEnabled     Boolean  @default(false)
+  totpBackupCodes String[] @default([])
 
-  incidentsCreated      Incident[]      @relation("IncidentCreatedBy")
-  incidentsUpdated      Incident[]      @relation("IncidentUpdatedBy")
-  personsCreated        Person[]        @relation("PersonCreatedBy")
-  transfersCreated      Transfer[]      @relation("TransferCreatedBy")
-  aidRequestsCreated    AidRequest[]    @relation("AidRequestCreatedBy")
-  aidRequestsUpdated    AidRequest[]    @relation("AidRequestUpdatedBy")
-  donationPointsCreated DonationPoint[] @relation("DonationPointCreatedBy")
-  donationsCreated      Donation[]      @relation("DonationCreatedBy")
-  donationsUpdated      Donation[]      @relation("DonationUpdatedBy")
-  petsCreated           Pet[]           @relation("PetCreatedBy")
-  petsUpdated           Pet[]           @relation("PetUpdatedBy")
-  apiKeysCreados        ApiKey[]        @relation("ApiKeyCreatedBy")
+  // Perfil de colaborador de campo (rescatistas, voluntarios, entidades, etc.)
+  estadoCuenta             EstadoCuentaUsuario @default(APROBADA)
+  tipoColaborador          TipoColaborador?
+  telefono                 String?
+  direccionFisica          String?
+  contactoEmergenciaNombre String?
+  contactoEmergenciaTelefono String?
+
+  // Lugar de acción: la zona donde está colaborando
+  lugarAccionDireccion    String?
+  lugarAccionMunicipio    String?
+  lugarAccionDepartamento String?
+  lugarAccionLat          Float?
+  lugarAccionLng          Float?
+
+  aprobadoPorId String?
+  aprobadoPor   User?     @relation("UserAprobadoPor", fields: [aprobadoPorId], references: [id])
+  aprobados     User[]    @relation("UserAprobadoPor")
+  aprobadoEn    DateTime?
+
+  // Ubicación en tiempo real (opcional, activada explícitamente por el usuario)
+  compartirUbicacion     Boolean   @default(false)
+  ubicacionLat           Float?
+  ubicacionLng           Float?
+  ubicacionActualizadaEn DateTime?
+
+  incidentsCreated      Incident[]        @relation("IncidentCreatedBy")
+  incidentsUpdated      Incident[]        @relation("IncidentUpdatedBy")
+  personsCreated        Person[]          @relation("PersonCreatedBy")
+  transfersCreated      Transfer[]        @relation("TransferCreatedBy")
+  aidRequestsCreated    AidRequest[]      @relation("AidRequestCreatedBy")
+  aidRequestsUpdated    AidRequest[]      @relation("AidRequestUpdatedBy")
+  donationPointsCreated DonationPoint[]   @relation("DonationPointCreatedBy")
+  donationsCreated      Donation[]        @relation("DonationCreatedBy")
+  donationsUpdated      Donation[]        @relation("DonationUpdatedBy")
+  petsCreated           Pet[]             @relation("PetCreatedBy")
+  petsUpdated           Pet[]             @relation("PetUpdatedBy")
+  apiKeysCreados        ApiKey[]          @relation("ApiKeyCreatedBy")
+  registrosBitacora     RegistroBitacora[] @relation("RegistroBitacoraAutor")
+  registrosAtendidos    RegistroBitacora[] @relation("RegistroBitacoraAtendidaPor")
   auditLogs             AuditLog[]
 
+  @@index([estadoCuenta])
   @@map("users")
 }
 
@@ -161,6 +205,8 @@ enum AccionAuditoria {
   MFA_ACTIVADA
   MFA_DESACTIVADA
   VER
+  APROBAR
+  RECHAZAR
 }
 
 enum EstadoPuntoAcopio {
@@ -499,6 +545,58 @@ model Pet {
   @@index([estado])
   @@index([municipio])
   @@map("pets")
+}
+
+// ---------------------------------------------------------------------------
+// Bitácora de campo: registros internos entre los usuarios que atienden la
+// emergencia (rescatistas, voluntarios, coordinadores, centros de acopio,
+// entidades) — distinto de los reportes que hacen las personas afectadas.
+// No es información pública.
+// ---------------------------------------------------------------------------
+
+enum TipoRegistroBitacora {
+  ACTUALIZACION
+  NECESIDAD
+}
+
+enum EstadoNecesidadCampo {
+  PENDIENTE
+  ATENDIDA
+}
+
+model RegistroBitacora {
+  id          String                @id @default(cuid())
+  tipo        TipoRegistroBitacora
+  descripcion String
+
+  direccion    String?
+  municipio    String?
+  departamento String?
+  latitud      Float?
+  longitud     Float?
+
+  fotos String[] @default([])
+
+  contactoLugarNombre   String?
+  contactoLugarTelefono String?
+
+  estado EstadoNecesidadCampo @default(PENDIENTE)
+
+  autorId String
+  autor   User   @relation("RegistroBitacoraAutor", fields: [autorId], references: [id])
+
+  atendidaPorId String?
+  atendidaPor   User?     @relation("RegistroBitacoraAtendidaPor", fields: [atendidaPorId], references: [id])
+  atendidaEn    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([autorId])
+  @@index([tipo])
+  @@index([estado])
+  @@index([createdAt])
+  @@map("registros_bitacora")
 }
 
 // ---------------------------------------------------------------------------

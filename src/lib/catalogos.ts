@@ -9,3 +9,12 @@ export const TIPOS_AYUDA = [
   { value: "ELEMENTOS_ASEO", label: "Elementos de aseo" },
   { value: "OTRO", label: "Otro" },
 ] as const;
+
+export const TIPOS_COLABORADOR = [
+  { value: "RESCATISTA", label: "Rescatista" },
+  { value: "VOLUNTARIO", label: "Voluntario" },
+  { value: "COORDINADOR_VOLUNTARIOS", label: "Coordinador de voluntarios" },
+  { value: "CENTRO_ACOPIO", label: "Centro de acopio de donaciones" },
+  { value: "ENTIDAD", label: "Entidad / organización" },
+  { value: "OTRO", label: "Otro" },
+] as const;

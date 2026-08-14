@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Boton, Campo, Etiqueta, Seleccion, Tarjeta } from "@/components/ui/campos";
 import { formatearFechaHora } from "@/lib/fecha";
+import { TIPOS_COLABORADOR } from "@/lib/catalogos";
 
 const ROLES = [
   { value: "OPERADOR", label: "Operador (rescatista) — crea y gestiona reportes" },
@@ -10,6 +11,10 @@ const ROLES = [
   { value: "CONSULTA", label: "Consulta — solo puede ver, sin editar" },
   { value: "ADMIN", label: "Administrador — control total, incluida esta sección" },
 ];
+
+function etiquetaColaborador(tipo: string | null) {
+  return TIPOS_COLABORADOR.find((t) => t.value === tipo)?.label ?? tipo ?? "—";
+}
 
 interface Usuario {
   id: string;
@@ -19,6 +24,15 @@ interface Usuario {
   active: boolean;
   totpEnabled: boolean;
   createdAt: string;
+  estadoCuenta: string;
+  tipoColaborador: string | null;
+  telefono: string | null;
+  direccionFisica: string | null;
+  contactoEmergenciaNombre: string | null;
+  contactoEmergenciaTelefono: string | null;
+  lugarAccionDireccion: string | null;
+  lugarAccionMunicipio: string | null;
+  lugarAccionDepartamento: string | null;
 }
 
 function CredencialTemporal({ etiqueta, valor, onCerrar }: { etiqueta: string; valor: string; onCerrar: () => void }) {
@@ -44,6 +58,68 @@ function CredencialTemporal({ etiqueta, valor, onCerrar }: { etiqueta: string; v
   );
 }
 
+function SolicitudPendiente({
+  usuario,
+  onAprobar,
+  onRechazar,
+}: {
+  usuario: Usuario;
+  onAprobar: (id: string, role: string) => void;
+  onRechazar: (id: string) => void;
+}) {
+  const [role, setRole] = useState("OPERADOR");
+  const [procesando, setProcesando] = useState(false);
+
+  return (
+    <Tarjeta className="border-warning/40 bg-amber-50/40 p-3.5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-bold">{usuario.name}</p>
+          <p className="text-xs text-muted">{usuario.email} · {usuario.telefono}</p>
+          <p className="mt-1 text-xs font-semibold text-primary">{etiquetaColaborador(usuario.tipoColaborador)}</p>
+          <p className="mt-1 text-xs text-muted">
+            Lugar de acción: {usuario.lugarAccionDireccion}, {usuario.lugarAccionMunicipio}, {usuario.lugarAccionDepartamento}
+          </p>
+          <p className="mt-1 text-xs text-muted">Dirección física: {usuario.direccionFisica}</p>
+          <p className="mt-1 text-xs text-muted">
+            Contacto de emergencia: {usuario.contactoEmergenciaNombre} · {usuario.contactoEmergenciaTelefono}
+          </p>
+          <p className="mt-1 text-xs text-muted">Solicitado {formatearFechaHora(usuario.createdAt)}</p>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Seleccion value={role} onChange={(e) => setRole(e.target.value)} className="w-auto py-1.5 text-xs">
+          {ROLES.map((r) => (
+            <option key={r.value} value={r.value}>{r.label}</option>
+          ))}
+        </Seleccion>
+        <Boton
+          type="button"
+          className="w-auto px-4 py-1.5 text-xs"
+          disabled={procesando}
+          onClick={async () => { setProcesando(true); await onAprobar(usuario.id, role); setProcesando(false); }}
+        >
+          Aprobar
+        </Boton>
+        <Boton
+          type="button"
+          variante="secundario"
+          className="w-auto px-4 py-1.5 text-xs text-emergency"
+          disabled={procesando}
+          onClick={async () => {
+            if (!window.confirm(`¿Rechazar la solicitud de ${usuario.name}?`)) return;
+            setProcesando(true);
+            await onRechazar(usuario.id);
+            setProcesando(false);
+          }}
+        >
+          Rechazar
+        </Boton>
+      </div>
+    </Tarjeta>
+  );
+}
+
 export default function UsuariosPanel({
   usuariosIniciales,
   usuarioActualId,
@@ -59,6 +135,9 @@ export default function UsuariosPanel({
   const [error, setError] = useState<string | null>(null);
   const [nuevaCredencial, setNuevaCredencial] = useState<{ email: string; password: string } | null>(null);
   const [reseteos, setReseteos] = useState<Record<string, string>>({});
+
+  const pendientes = usuarios.filter((u) => u.estadoCuenta === "PENDIENTE");
+  const resto = usuarios.filter((u) => u.estadoCuenta !== "PENDIENTE");
 
   async function crearUsuario(e: React.FormEvent) {
     e.preventDefault();
@@ -77,7 +156,12 @@ export default function UsuariosPanel({
     }
     setNuevaCredencial({ email: data.email, password: data.contrasenaTemporal });
     setUsuarios((prev) => [
-      { id: data.id, name: data.name, email: data.email, role: data.role, active: true, totpEnabled: false, createdAt: new Date().toISOString() },
+      {
+        id: data.id, name: data.name, email: data.email, role: data.role, active: true, totpEnabled: false,
+        createdAt: new Date().toISOString(), estadoCuenta: "APROBADA", tipoColaborador: null, telefono: null,
+        direccionFisica: null, contactoEmergenciaNombre: null, contactoEmergenciaTelefono: null,
+        lugarAccionDireccion: null, lugarAccionMunicipio: null, lugarAccionDepartamento: null,
+      },
       ...prev,
     ]);
     setName("");
@@ -123,8 +207,43 @@ export default function UsuariosPanel({
     setReseteos((prev) => ({ ...prev, [id]: data.contrasenaTemporal }));
   }
 
+  async function aprobar(id: string, roleElegido: string) {
+    const res = await fetch(`/api/users/${id}/aprobar`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: roleElegido }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      window.alert(data.error ?? "No se pudo aprobar la solicitud");
+      return;
+    }
+    setUsuarios((prev) => prev.map((u) => (u.id === id ? { ...u, estadoCuenta: "APROBADA", active: true, role: roleElegido } : u)));
+  }
+
+  async function rechazar(id: string) {
+    const res = await fetch(`/api/users/${id}/rechazar`, { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      window.alert(data.error ?? "No se pudo rechazar la solicitud");
+      return;
+    }
+    setUsuarios((prev) => prev.map((u) => (u.id === id ? { ...u, estadoCuenta: "RECHAZADA", active: false } : u)));
+  }
+
   return (
-    <div className="mt-5 flex flex-col gap-5">
+    <div className="mt-5 flex flex-col gap-6">
+      {pendientes.length > 0 && (
+        <div>
+          <h2 className="font-bold text-warning">Solicitudes pendientes ({pendientes.length})</h2>
+          <div className="mt-3 flex flex-col gap-2">
+            {pendientes.map((u) => (
+              <SolicitudPendiente key={u.id} usuario={u} onAprobar={aprobar} onRechazar={rechazar} />
+            ))}
+          </div>
+        </div>
+      )}
+
       <Tarjeta className="p-4">
         <h2 className="font-bold">Crear nueva cuenta</h2>
         {error && <div className="mt-2 rounded-xl bg-red-50 p-3 text-sm font-medium text-emergency">{error}</div>}
@@ -161,16 +280,18 @@ export default function UsuariosPanel({
             <p className="text-xs text-muted">
               Se genera una contraseña temporal que solo verás una vez — compártesela a la persona por
               un medio seguro (llamada, WhatsApp) y pídele que la cambie en su primer ingreso, desde{" "}
-              <span className="font-medium">Seguridad → Cambiar contraseña</span>.
+              <span className="font-medium">Seguridad → Cambiar contraseña</span>. Si prefieres que la
+              persona se registre por su cuenta, compártele el enlace{" "}
+              <span className="font-mono">/panel/registro</span>.
             </p>
           </form>
         )}
       </Tarjeta>
 
       <div>
-        <h2 className="font-bold">Cuentas existentes ({usuarios.length})</h2>
+        <h2 className="font-bold">Cuentas existentes ({resto.length})</h2>
         <div className="mt-3 flex flex-col gap-2">
-          {usuarios.map((u) => {
+          {resto.map((u) => {
             const esUno = u.id === usuarioActualId;
             return (
               <Tarjeta key={u.id} className="p-3.5">
@@ -180,10 +301,12 @@ export default function UsuariosPanel({
                       {u.name} {esUno && <span className="font-normal text-muted">(tú)</span>}
                     </p>
                     <p className="text-xs text-muted">{u.email}</p>
+                    {u.tipoColaborador && <p className="text-xs font-semibold text-primary">{etiquetaColaborador(u.tipoColaborador)}</p>}
                     <p className="mt-1 text-xs text-muted">
                       Creada {formatearFechaHora(u.createdAt)}
                       {u.totpEnabled && " · MFA activado"}
-                      {!u.active && " · Cuenta desactivada"}
+                      {u.estadoCuenta === "RECHAZADA" && " · Solicitud rechazada"}
+                      {!u.active && u.estadoCuenta !== "RECHAZADA" && " · Cuenta desactivada"}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

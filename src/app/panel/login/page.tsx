@@ -100,7 +100,13 @@ function FormularioLogin() {
             </Boton>
           </form>
         </Tarjeta>
-        <Link href="/" className="mt-4 block text-center text-sm font-medium text-white/80">
+        <p className="mt-4 text-center text-sm text-white/80">
+          ¿Eres rescatista, voluntario o representas una entidad?{" "}
+          <Link href="/panel/registro" className="font-semibold text-white underline">
+            Regístrate aquí
+          </Link>
+        </p>
+        <Link href="/" className="mt-3 block text-center text-sm font-medium text-white/80">
           ← Volver al inicio
         </Link>
       </div>

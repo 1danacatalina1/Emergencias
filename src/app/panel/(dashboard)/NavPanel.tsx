@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { puedeAuditarYExportar, puedeGestionarIntegraciones, puedeGestionarUsuarios } from "@/lib/permisos";
+import { puedeAuditarYExportar, puedeGestionarIntegraciones, puedeGestionarUsuarios, puedeVerEquipoDeCampo } from "@/lib/permisos";
 
 const ENLACES_BASE = [
   { href: "/panel", label: "Inicio", icono: "📊" },
@@ -13,16 +13,19 @@ const ENLACES_BASE = [
   { href: "/panel/ayudas", label: "Ayudas", icono: "🏠" },
   { href: "/panel/donaciones", label: "Donaciones", icono: "🎁" },
   { href: "/panel/mascotas", label: "Mascotas", icono: "🐾" },
+  { href: "/panel/bitacora", label: "Bitácora de campo", icono: "📒" },
   { href: "/panel/seguridad", label: "Seguridad", icono: "🔒" },
 ];
 
 const ENLACE_AUDITORIA = { href: "/panel/auditoria", label: "Auditoría", icono: "🕵️" };
 const ENLACE_INTEGRACIONES = { href: "/panel/integraciones", label: "Integraciones", icono: "🔌" };
 const ENLACE_USUARIOS = { href: "/panel/usuarios", label: "Usuarios", icono: "👥" };
+const ENLACE_MAPA_EQUIPO = { href: "/panel/mapa-equipo", label: "Mapa del equipo", icono: "🛰️" };
 
 export default function NavPanel({ usuario }: { usuario: { name: string; role: string } }) {
   const pathname = usePathname();
   let ENLACES = puedeAuditarYExportar(usuario.role) ? [...ENLACES_BASE, ENLACE_AUDITORIA] : ENLACES_BASE;
+  if (puedeVerEquipoDeCampo(usuario.role)) ENLACES = [...ENLACES, ENLACE_MAPA_EQUIPO];
   if (puedeGestionarUsuarios(usuario.role)) ENLACES = [...ENLACES, ENLACE_USUARIOS];
   if (puedeGestionarIntegraciones(usuario.role)) ENLACES = [...ENLACES, ENLACE_INTEGRACIONES];
 

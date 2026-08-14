@@ -83,6 +83,7 @@ const RUTAS_FORMULARIO_PUBLICO = new Set([
   "/api/pets",
   "/api/donations",
   "/api/donation-points",
+  "/api/registro",
 ]);
 
 /** Evalúa si la solicitud debe limitarse según su ruta y método. Null = continuar normalmente. */

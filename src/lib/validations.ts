@@ -276,6 +276,59 @@ export const passwordChangeSchema = z
     path: ["passwordNueva"],
   });
 
+// Autoregistro de colaboradores (rescatistas, voluntarios, entidades) — público
+export const tipoColaboradorEnum = z.enum([
+  "RESCATISTA",
+  "VOLUNTARIO",
+  "COORDINADOR_VOLUNTARIOS",
+  "CENTRO_ACOPIO",
+  "ENTIDAD",
+  "OTRO",
+]);
+
+export const userSelfRegisterSchema = z.object({
+  name: z.string().min(3, "Indica tu nombre completo").max(NOMBRE_MAX),
+  email: z.string().email("Correo inválido").max(320),
+  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").max(200),
+  telefono: z.string().min(7, "Indica un teléfono de contacto").max(TELEFONO_MAX),
+  direccionFisica: z.string().min(3, "Indica tu dirección física").max(TEXTO_CORTO_MAX),
+  contactoEmergenciaNombre: z.string().min(3, "Indica el nombre de tu contacto de emergencia").max(NOMBRE_MAX),
+  contactoEmergenciaTelefono: z.string().min(7, "Indica el teléfono de tu contacto de emergencia").max(TELEFONO_MAX),
+  tipoColaborador: tipoColaboradorEnum,
+  lugarAccionDireccion: z.string().min(3, "Indica el lugar donde vas a colaborar").max(TEXTO_CORTO_MAX),
+  lugarAccionMunicipio: z.string().min(2, "El municipio es obligatorio").max(NOMBRE_MAX),
+  lugarAccionDepartamento: z.string().min(2, "El departamento es obligatorio").max(NOMBRE_MAX),
+  lugarAccionLat: z.coerce.number().min(-90).max(90),
+  lugarAccionLng: z.coerce.number().min(-180).max(180),
+});
+
+export const userAprobarSchema = z.object({
+  role: rolUsuarioEnum,
+});
+
+// Bitácora de campo (usuarios del panel)
+export const tipoRegistroBitacoraEnum = z.enum(["ACTUALIZACION", "NECESIDAD"]);
+
+export const registroBitacoraCreateSchema = z.object({
+  tipo: tipoRegistroBitacoraEnum,
+  descripcion: z.string().min(5, "Describe brevemente la novedad o necesidad").max(TEXTO_LARGO_MAX),
+  direccion: z.string().max(TEXTO_CORTO_MAX).optional().nullable(),
+  municipio: z.string().max(NOMBRE_MAX).optional().nullable(),
+  departamento: z.string().max(NOMBRE_MAX).optional().nullable(),
+  latitud: z.coerce.number().min(-90).max(90).optional().nullable(),
+  longitud: z.coerce.number().min(-180).max(180).optional().nullable(),
+  fotos: z.array(fotoUrlSchema).max(FOTOS_MAX).default([]),
+  contactoLugarNombre: z.string().max(NOMBRE_MAX).optional().nullable(),
+  contactoLugarTelefono: z.string().max(TELEFONO_MAX).optional().nullable(),
+});
+
+// Ubicación en tiempo real (usuarios del panel)
+export const ubicacionUpdateSchema = z.object({
+  compartir: z.boolean(),
+  latitud: z.coerce.number().min(-90).max(90).optional(),
+  longitud: z.coerce.number().min(-180).max(180).optional(),
+});
+
 // Puntos de acopio de donaciones (público)
 export const estadoPuntoAcopioEnum = z.enum(["ACTIVO", "PAUSADO", "CERRADO"]);
 
