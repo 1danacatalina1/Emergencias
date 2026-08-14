@@ -22,11 +22,12 @@ function haceCuanto(iso: string) {
 export default function EquipoMapaPanel() {
   const [usuarios, setUsuarios] = useState<UbicacionUsuarioMapa[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [soloMiEquipo, setSoloMiEquipo] = useState(false);
 
   useEffect(() => {
     let activo = true;
     async function cargar() {
-      const res = await fetch("/api/equipo/ubicaciones");
+      const res = await fetch(`/api/equipo/ubicaciones${soloMiEquipo ? "?miEquipo=true" : ""}`);
       if (!res.ok || !activo) return;
       const data = await res.json();
       if (activo) {
@@ -37,7 +38,7 @@ export default function EquipoMapaPanel() {
     cargar();
     const intervalo = setInterval(cargar, INTERVALO_ACTUALIZACION_MS);
     return () => { activo = false; clearInterval(intervalo); };
-  }, []);
+  }, [soloMiEquipo]);
 
   return (
     <div className="mt-4 flex flex-1 flex-col gap-4 md:flex-row">
@@ -45,10 +46,20 @@ export default function EquipoMapaPanel() {
         <MapaEquipo usuarios={usuarios} />
       </div>
       <div className="w-full shrink-0 md:w-72">
-        <h2 className="text-sm font-bold">Compartiendo ahora ({usuarios.length})</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-bold">Compartiendo ahora ({usuarios.length})</h2>
+          <label className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+            <input type="checkbox" checked={soloMiEquipo} onChange={(e) => setSoloMiEquipo(e.target.checked)} />
+            Mi equipo ⭐
+          </label>
+        </div>
         <div className="mt-2 flex max-h-[40vh] flex-col gap-2 overflow-y-auto md:max-h-[calc(100vh-14rem)]">
           {!cargando && usuarios.length === 0 && (
-            <Tarjeta className="p-3 text-xs text-muted">Nadie está compartiendo su ubicación en este momento.</Tarjeta>
+            <Tarjeta className="p-3 text-xs text-muted">
+              {soloMiEquipo
+                ? "Nadie de tu equipo (⭐ en Usuarios) está compartiendo su ubicación."
+                : "Nadie está compartiendo su ubicación en este momento."}
+            </Tarjeta>
           )}
           {usuarios.map((u) => (
             <Tarjeta key={u.id} className="p-3">

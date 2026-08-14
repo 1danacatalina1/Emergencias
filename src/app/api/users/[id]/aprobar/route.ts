@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { userAprobarSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
-import { puedeGestionarUsuarios } from "@/lib/permisos";
+import { puedeGestionarUsuarios, esAdministrador } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +23,9 @@ export async function POST(request: Request, { params }: Params) {
   const parsed = userAprobarSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos", detalles: parsed.error.flatten() }, { status: 400 });
+  }
+  if (parsed.data.role === "ADMIN" && !esAdministrador(session.user.role)) {
+    return NextResponse.json({ error: "Solo el Administrador puede aprobar cuentas como Administrador" }, { status: 403 });
   }
 
   const existente = await prisma.user.findUnique({ where: { id } });

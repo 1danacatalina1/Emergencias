@@ -26,8 +26,17 @@ export function puedeGestionarIntegraciones(rol?: string | null): boolean {
   return rol === "ADMIN";
 }
 
-/** Crear, editar o desactivar cuentas del panel es exclusivo del Administrador. */
+/**
+ * Crear, aprobar, editar o desactivar cuentas de voluntarios/rescatistas está
+ * disponible para Administrador y Coordinador. Las cuentas de Administrador
+ * en sí mismas solo las gestiona otro Administrador (ver esAdministrador).
+ */
 export function puedeGestionarUsuarios(rol?: string | null): boolean {
+  return rol === "ADMIN" || rol === "COORDINADOR";
+}
+
+/** Asignar el rol Administrador, o editar/desactivar una cuenta que ya es Administrador, es exclusivo del propio Administrador. */
+export function esAdministrador(rol?: string | null): boolean {
   return rol === "ADMIN";
 }
 

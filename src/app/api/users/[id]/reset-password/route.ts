@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { generarContrasenaTemporal } from "@/lib/passwords";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
-import { puedeGestionarUsuarios } from "@/lib/permisos";
+import { puedeGestionarUsuarios, esAdministrador } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +23,9 @@ export async function POST(request: Request, { params }: Params) {
   const existente = await prisma.user.findUnique({ where: { id } });
   if (!existente) {
     return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+  }
+  if (existente.role === "ADMIN" && !esAdministrador(session.user.role)) {
+    return NextResponse.json({ error: "Solo el Administrador puede restablecer la contraseña de otro Administrador" }, { status: 403 });
   }
 
   const contrasenaTemporal = generarContrasenaTemporal();

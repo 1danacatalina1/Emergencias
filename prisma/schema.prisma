@@ -92,6 +92,9 @@ model User {
   registrosAtendidos    RegistroBitacora[] @relation("RegistroBitacoraAtendidaPor")
   auditLogs             AuditLog[]
 
+  equipoComoCoordinador SeguimientoEquipo[] @relation("SeguimientoCoordinador")
+  equipoComoVoluntario  SeguimientoEquipo[] @relation("SeguimientoVoluntario")
+
   @@index([estadoCuenta])
   @@map("users")
 }
@@ -597,6 +600,27 @@ model RegistroBitacora {
   @@index([estado])
   @@index([createdAt])
   @@map("registros_bitacora")
+}
+
+/**
+ * Permite a un Administrador o Coordinador marcar qué voluntarios/rescatistas
+ * prefiere seguir de cerca, para filtrar la lista de usuarios y el mapa del
+ * equipo a "mi equipo" en vez de ver a todo el mundo.
+ */
+model SeguimientoEquipo {
+  id String @id @default(cuid())
+
+  coordinadorId String
+  coordinador   User   @relation("SeguimientoCoordinador", fields: [coordinadorId], references: [id])
+
+  voluntarioId String
+  voluntario   User   @relation("SeguimientoVoluntario", fields: [voluntarioId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([coordinadorId, voluntarioId])
+  @@index([coordinadorId])
+  @@map("seguimientos_equipo")
 }
 
 // ---------------------------------------------------------------------------

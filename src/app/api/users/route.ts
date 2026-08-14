@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { userCreateSchema } from "@/lib/validations";
 import { generarContrasenaTemporal } from "@/lib/passwords";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
-import { puedeGestionarUsuarios } from "@/lib/permisos";
+import { puedeGestionarUsuarios, esAdministrador } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +47,9 @@ export async function POST(request: Request) {
   const parsed = userCreateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos", detalles: parsed.error.flatten() }, { status: 400 });
+  }
+  if (parsed.data.role === "ADMIN" && !esAdministrador(session.user.role)) {
+    return NextResponse.json({ error: "Solo el Administrador puede crear cuentas de Administrador" }, { status: 403 });
   }
 
   const existente = await prisma.user.findUnique({ where: { email: parsed.data.email.toLowerCase() } });

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { userUpdateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
-import { puedeGestionarUsuarios } from "@/lib/permisos";
+import { puedeGestionarUsuarios, esAdministrador } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +28,10 @@ export async function PATCH(request: Request, { params }: Params) {
   const existente = await prisma.user.findUnique({ where: { id } });
   if (!existente) {
     return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+  }
+
+  if (!esAdministrador(session.user.role) && (existente.role === "ADMIN" || parsed.data.role === "ADMIN")) {
+    return NextResponse.json({ error: "Solo el Administrador puede gestionar cuentas de Administrador" }, { status: 403 });
   }
 
   if (id === session.user.id && parsed.data.role && parsed.data.role !== "ADMIN") {

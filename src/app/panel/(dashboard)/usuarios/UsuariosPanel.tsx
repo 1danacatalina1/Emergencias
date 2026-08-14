@@ -60,10 +60,12 @@ function CredencialTemporal({ etiqueta, valor, onCerrar }: { etiqueta: string; v
 
 function SolicitudPendiente({
   usuario,
+  rolesDisponibles,
   onAprobar,
   onRechazar,
 }: {
   usuario: Usuario;
+  rolesDisponibles: typeof ROLES;
   onAprobar: (id: string, role: string) => void;
   onRechazar: (id: string) => void;
 }) {
@@ -89,7 +91,7 @@ function SolicitudPendiente({
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Seleccion value={role} onChange={(e) => setRole(e.target.value)} className="w-auto py-1.5 text-xs">
-          {ROLES.map((r) => (
+          {rolesDisponibles.map((r) => (
             <option key={r.value} value={r.value}>{r.label}</option>
           ))}
         </Seleccion>
@@ -123,9 +125,13 @@ function SolicitudPendiente({
 export default function UsuariosPanel({
   usuariosIniciales,
   usuarioActualId,
+  esAdmin,
+  seguidosIniciales,
 }: {
   usuariosIniciales: Usuario[];
   usuarioActualId: string;
+  esAdmin: boolean;
+  seguidosIniciales: string[];
 }) {
   const [usuarios, setUsuarios] = useState(usuariosIniciales);
   const [name, setName] = useState("");
@@ -135,9 +141,14 @@ export default function UsuariosPanel({
   const [error, setError] = useState<string | null>(null);
   const [nuevaCredencial, setNuevaCredencial] = useState<{ email: string; password: string } | null>(null);
   const [reseteos, setReseteos] = useState<Record<string, string>>({});
+  const [seguidos, setSeguidos] = useState(new Set(seguidosIniciales));
+  const [soloMiEquipo, setSoloMiEquipo] = useState(false);
+
+  const rolesDisponibles = esAdmin ? ROLES : ROLES.filter((r) => r.value !== "ADMIN");
 
   const pendientes = usuarios.filter((u) => u.estadoCuenta === "PENDIENTE");
-  const resto = usuarios.filter((u) => u.estadoCuenta !== "PENDIENTE");
+  let resto = usuarios.filter((u) => u.estadoCuenta !== "PENDIENTE");
+  if (soloMiEquipo) resto = resto.filter((u) => seguidos.has(u.id));
 
   async function crearUsuario(e: React.FormEvent) {
     e.preventDefault();
@@ -231,6 +242,27 @@ export default function UsuariosPanel({
     setUsuarios((prev) => prev.map((u) => (u.id === id ? { ...u, estadoCuenta: "RECHAZADA", active: false } : u)));
   }
 
+  async function alternarSeguido(id: string) {
+    const yaSeguido = seguidos.has(id);
+    setSeguidos((prev) => {
+      const copia = new Set(prev);
+      if (yaSeguido) copia.delete(id); else copia.add(id);
+      return copia;
+    });
+    const res = await fetch("/api/equipo/seguidos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usuarioId: id }),
+    });
+    if (!res.ok) {
+      setSeguidos((prev) => {
+        const copia = new Set(prev);
+        if (yaSeguido) copia.add(id); else copia.delete(id);
+        return copia;
+      });
+    }
+  }
+
   return (
     <div className="mt-5 flex flex-col gap-6">
       {pendientes.length > 0 && (
@@ -238,7 +270,7 @@ export default function UsuariosPanel({
           <h2 className="font-bold text-warning">Solicitudes pendientes ({pendientes.length})</h2>
           <div className="mt-3 flex flex-col gap-2">
             {pendientes.map((u) => (
-              <SolicitudPendiente key={u.id} usuario={u} onAprobar={aprobar} onRechazar={rechazar} />
+              <SolicitudPendiente key={u.id} usuario={u} rolesDisponibles={rolesDisponibles} onAprobar={aprobar} onRechazar={rechazar} />
             ))}
           </div>
         </div>
@@ -269,7 +301,7 @@ export default function UsuariosPanel({
             <div>
               <Etiqueta htmlFor="rol-usuario">Rol</Etiqueta>
               <Seleccion id="rol-usuario" value={role} onChange={(e) => setRole(e.target.value)}>
-                {ROLES.map((r) => (
+                {rolesDisponibles.map((r) => (
                   <option key={r.value} value={r.value}>{r.label}</option>
                 ))}
               </Seleccion>
@@ -289,55 +321,81 @@ export default function UsuariosPanel({
       </Tarjeta>
 
       <div>
-        <h2 className="font-bold">Cuentas existentes ({resto.length})</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-bold">Cuentas existentes ({resto.length})</h2>
+          <label className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+            <input type="checkbox" checked={soloMiEquipo} onChange={(e) => setSoloMiEquipo(e.target.checked)} />
+            Ver solo mi equipo ⭐
+          </label>
+        </div>
+        {soloMiEquipo && resto.length === 0 && (
+          <p className="mt-2 text-xs text-muted">Aún no marcaste a nadie con ⭐. Desmarca el filtro y toca la estrella de quienes quieras seguir.</p>
+        )}
         <div className="mt-3 flex flex-col gap-2">
           {resto.map((u) => {
             const esUno = u.id === usuarioActualId;
+            const esAdminBloqueado = u.role === "ADMIN" && !esAdmin;
             return (
               <Tarjeta key={u.id} className="p-3.5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold">
-                      {u.name} {esUno && <span className="font-normal text-muted">(tú)</span>}
-                    </p>
-                    <p className="text-xs text-muted">{u.email}</p>
-                    {u.tipoColaborador && <p className="text-xs font-semibold text-primary">{etiquetaColaborador(u.tipoColaborador)}</p>}
-                    <p className="mt-1 text-xs text-muted">
-                      Creada {formatearFechaHora(u.createdAt)}
-                      {u.totpEnabled && " · MFA activado"}
-                      {u.estadoCuenta === "RECHAZADA" && " · Solicitud rechazada"}
-                      {!u.active && u.estadoCuenta !== "RECHAZADA" && " · Cuenta desactivada"}
-                    </p>
+                  <div className="flex min-w-0 items-start gap-2">
+                    {!esUno && (
+                      <button
+                        type="button"
+                        onClick={() => alternarSeguido(u.id)}
+                        title={seguidos.has(u.id) ? "Quitar de mi equipo" : "Agregar a mi equipo"}
+                        className={`mt-0.5 shrink-0 text-lg ${seguidos.has(u.id) ? "text-warning" : "text-black/20"}`}
+                      >
+                        {seguidos.has(u.id) ? "★" : "☆"}
+                      </button>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold">
+                        {u.name} {esUno && <span className="font-normal text-muted">(tú)</span>}
+                      </p>
+                      <p className="text-xs text-muted">{u.email}</p>
+                      {u.tipoColaborador && <p className="text-xs font-semibold text-primary">{etiquetaColaborador(u.tipoColaborador)}</p>}
+                      <p className="mt-1 text-xs text-muted">
+                        Creada {formatearFechaHora(u.createdAt)}
+                        {u.totpEnabled && " · MFA activado"}
+                        {u.estadoCuenta === "RECHAZADA" && " · Solicitud rechazada"}
+                        {!u.active && u.estadoCuenta !== "RECHAZADA" && " · Cuenta desactivada"}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Seleccion
-                      value={u.role}
-                      onChange={(e) => cambiarRol(u.id, e.target.value)}
-                      disabled={esUno}
-                      className="w-auto py-1.5 text-xs"
-                    >
-                      {ROLES.map((r) => (
-                        <option key={r.value} value={r.value}>{r.value}</option>
-                      ))}
-                    </Seleccion>
-                    <label className="flex items-center gap-1.5 text-xs font-medium text-foreground">
-                      <input
-                        type="checkbox"
-                        checked={u.active}
+                  {esAdminBloqueado ? (
+                    <p className="text-xs font-medium text-muted">🔒 Solo el Administrador gestiona esta cuenta</p>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Seleccion
+                        value={u.role}
+                        onChange={(e) => cambiarRol(u.id, e.target.value)}
                         disabled={esUno}
-                        onChange={(e) => cambiarActivo(u.id, e.target.checked)}
-                      />
-                      Activa
-                    </label>
-                    <Boton
-                      type="button"
-                      variante="secundario"
-                      className="w-auto px-3 py-1.5 text-xs"
-                      onClick={() => restablecerContrasena(u.id)}
-                    >
-                      Restablecer contraseña
-                    </Boton>
-                  </div>
+                        className="w-auto py-1.5 text-xs"
+                      >
+                        {rolesDisponibles.map((r) => (
+                          <option key={r.value} value={r.value}>{r.value}</option>
+                        ))}
+                      </Seleccion>
+                      <label className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                        <input
+                          type="checkbox"
+                          checked={u.active}
+                          disabled={esUno}
+                          onChange={(e) => cambiarActivo(u.id, e.target.checked)}
+                        />
+                        Activa
+                      </label>
+                      <Boton
+                        type="button"
+                        variante="secundario"
+                        className="w-auto px-3 py-1.5 text-xs"
+                        onClick={() => restablecerContrasena(u.id)}
+                      >
+                        Restablecer contraseña
+                      </Boton>
+                    </div>
+                  )}
                 </div>
                 {reseteos[u.id] && (
                   <CredencialTemporal
