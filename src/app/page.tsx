@@ -44,6 +44,13 @@ const ACCIONES = [
     clase: "bg-teal-700 text-white",
   },
   {
+    href: "/panel/registro",
+    icono: "🧑‍🚒",
+    titulo: "Únete como colaborador",
+    descripcion: "Regístrate como rescatista, voluntario, coordinador, centro de acopio o entidad",
+    clase: "bg-slate-800 text-white",
+  },
+  {
     href: "/mapa",
     icono: "📍",
     titulo: "Ver mapa",
