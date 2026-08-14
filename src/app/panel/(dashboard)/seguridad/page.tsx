@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import SeguridadPanel from "./SeguridadPanel";
+import CambiarContrasenaPanel from "./CambiarContrasenaPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export default async function SeguridadPage() {
       <p className="mt-1 text-sm text-muted">
         Protege el acceso al panel de gestión con verificación en dos pasos (MFA).
       </p>
+      <CambiarContrasenaPanel />
       <SeguridadPanel totpEnabledInicial={usuario.totpEnabled} email={usuario.email} />
     </div>
   );

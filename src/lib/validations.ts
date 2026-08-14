@@ -251,6 +251,31 @@ export const totpDisableSchema = z.object({
   password: z.string().min(1, "Ingresa tu contraseña actual").max(200),
 });
 
+// Gestión de usuarios del panel (solo Administrador)
+export const rolUsuarioEnum = z.enum(["ADMIN", "COORDINADOR", "OPERADOR", "CONSULTA"]);
+
+export const userCreateSchema = z.object({
+  name: z.string().min(3, "Indica el nombre completo").max(NOMBRE_MAX),
+  email: z.string().email("Correo inválido").max(320),
+  role: rolUsuarioEnum,
+});
+
+export const userUpdateSchema = z.object({
+  name: z.string().min(3).max(NOMBRE_MAX).optional(),
+  role: rolUsuarioEnum.optional(),
+  active: z.boolean().optional(),
+});
+
+export const passwordChangeSchema = z
+  .object({
+    passwordActual: z.string().min(1, "Ingresa tu contraseña actual").max(200),
+    passwordNueva: z.string().min(8, "La nueva contraseña debe tener al menos 8 caracteres").max(200),
+  })
+  .refine((data) => data.passwordActual !== data.passwordNueva, {
+    message: "La nueva contraseña debe ser distinta a la actual",
+    path: ["passwordNueva"],
+  });
+
 // Puntos de acopio de donaciones (público)
 export const estadoPuntoAcopioEnum = z.enum(["ACTIVO", "PAUSADO", "CERRADO"]);
 

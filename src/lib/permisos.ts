@@ -25,3 +25,8 @@ export function puedeAuditarYExportar(rol?: string | null): boolean {
 export function puedeGestionarIntegraciones(rol?: string | null): boolean {
   return rol === "ADMIN";
 }
+
+/** Crear, editar o desactivar cuentas del panel es exclusivo del Administrador. */
+export function puedeGestionarUsuarios(rol?: string | null): boolean {
+  return rol === "ADMIN";
+}
