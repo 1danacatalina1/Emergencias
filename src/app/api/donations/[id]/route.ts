@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { donationUpdateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
 import { puedeEscribir, puedeEliminar } from "@/lib/permisos";
+import { ajustarInventario } from "@/lib/inventario";
+import type { Prisma } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -43,9 +45,37 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Donación no encontrada" }, { status: 404 });
   }
 
-  const donacion = await prisma.donation.update({
-    where: { id },
-    data: { ...parsed.data, actualizadoPorId: session.user.id },
+  const donacion = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const actualizada = await tx.donation.update({
+      where: { id },
+      data: { ...parsed.data, actualizadoPorId: session.user.id },
+    });
+
+    // Ajusta el inventario del punto de acopio según las transiciones hacia/desde "RECIBIDA".
+    const puntoId = actualizada.donationPointId;
+    if (puntoId && actualizada.insumo) {
+      const eraRecibida = existente.estado === "RECIBIDA";
+      const esRecibida = actualizada.estado === "RECIBIDA";
+
+      if (!eraRecibida && esRecibida && actualizada.cantidad) {
+        await ajustarInventario(tx, puntoId, actualizada.insumo, actualizada.cantidad, actualizada.unidad);
+      } else if (eraRecibida && !esRecibida && existente.insumo && existente.cantidad) {
+        await ajustarInventario(tx, puntoId, existente.insumo, -existente.cantidad, existente.unidad);
+      } else if (
+        eraRecibida &&
+        esRecibida &&
+        (existente.insumo !== actualizada.insumo || existente.cantidad !== actualizada.cantidad)
+      ) {
+        if (existente.insumo && existente.cantidad) {
+          await ajustarInventario(tx, puntoId, existente.insumo, -existente.cantidad, existente.unidad);
+        }
+        if (actualizada.cantidad) {
+          await ajustarInventario(tx, puntoId, actualizada.insumo, actualizada.cantidad, actualizada.unidad);
+        }
+      }
+    }
+
+    return actualizada;
   });
 
   await registrarAuditoria({
@@ -74,7 +104,13 @@ export async function DELETE(request: Request, { params }: Params) {
   if (!existente) {
     return NextResponse.json({ error: "Donación no encontrada" }, { status: 404 });
   }
-  await prisma.donation.delete({ where: { id } });
+
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    if (existente.estado === "RECIBIDA" && existente.donationPointId && existente.insumo && existente.cantidad) {
+      await ajustarInventario(tx, existente.donationPointId, existente.insumo, -existente.cantidad, existente.unidad);
+    }
+    await tx.donation.delete({ where: { id } });
+  });
 
   await registrarAuditoria({
     entidad: "Donation",

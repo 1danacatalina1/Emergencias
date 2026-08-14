@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { envioUpdateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
 import { puedeEscribir, puedeEliminar } from "@/lib/permisos";
+import { ajustarInventario } from "@/lib/inventario";
+import type { Prisma } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -61,11 +63,23 @@ export async function DELETE(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Tu rol no tiene permiso para eliminar envíos" }, { status: 403 });
   }
   const { id } = await params;
-  const existente = await prisma.envio.findUnique({ where: { id } });
+  const existente = await prisma.envio.findUnique({ where: { id }, include: { items: true } });
   if (!existente) {
     return NextResponse.json({ error: "Envío no encontrado" }, { status: 404 });
   }
-  await prisma.envio.delete({ where: { id } });
+
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    for (const item of existente.items) {
+      await ajustarInventario(tx, existente.donationPointId, item.insumo, item.cantidad, item.unidad);
+    }
+    if (existente.solicitudInsumoId) {
+      await tx.solicitudInsumo.update({
+        where: { id: existente.solicitudInsumoId },
+        data: { estado: "ABIERTA", resueltaEn: null },
+      });
+    }
+    await tx.envio.delete({ where: { id } });
+  });
 
   await registrarAuditoria({
     entidad: "Envio",

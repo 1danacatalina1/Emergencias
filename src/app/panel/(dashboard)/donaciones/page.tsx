@@ -3,13 +3,14 @@ import { auth } from "@/lib/auth";
 import { puedeEliminar } from "@/lib/permisos";
 import DonacionesLista from "./DonacionesLista";
 import PuntosAcopioLista from "./PuntosAcopioLista";
-import EnviosPanel from "./EnviosPanel";
+import InventarioPanel from "./InventarioPanel";
+import EnviosYSolicitudes from "./EnviosYSolicitudes";
 
 export const dynamic = "force-dynamic";
 
 export default async function DonacionesPage() {
   const session = await auth();
-  const [donaciones, puntos, envios] = await Promise.all([
+  const [donaciones, puntos, envios, solicitudes, inventario] = await Promise.all([
     prisma.donation.findMany({
       include: { donationPoint: { select: { id: true, codigo: true, nombre: true } } },
       orderBy: { createdAt: "desc" },
@@ -27,7 +28,20 @@ export default async function DonacionesPage() {
       orderBy: { createdAt: "desc" },
       take: 300,
     }),
+    prisma.solicitudInsumo.findMany({
+      include: {
+        donationPoint: { select: { id: true, codigo: true, nombre: true, municipio: true, telefonoContacto: true } },
+        envio: { select: { id: true, codigo: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 300,
+    }),
+    prisma.inventarioItem.findMany({
+      orderBy: { insumo: "asc" },
+    }),
   ]);
+
+  const puntosOpciones = puntos.map((p) => ({ id: p.id, nombre: p.nombre, municipio: p.municipio }));
 
   return (
     <div>
@@ -44,14 +58,19 @@ export default async function DonacionesPage() {
       </div>
 
       <div className="mt-8">
-        <h2 className="font-bold">Envíos desde puntos de acopio ({envios.length})</h2>
+        <h2 className="font-bold">Inventario por punto de acopio</h2>
         <p className="mt-1 text-sm text-muted">
-          Registra hacia dónde envía cada punto de acopio, qué insumos y cuántas unidades, quién recibe la
-          ayuda y quién es responsable de ella.
+          Sube automáticamente cuando marcas una donación como recibida, y baja cuando se registra un
+          envío desde ese punto.
         </p>
-        <EnviosPanel
+        <InventarioPanel inventarioInicial={JSON.parse(JSON.stringify(inventario))} puntos={puntosOpciones} />
+      </div>
+
+      <div className="mt-8">
+        <EnviosYSolicitudes
           enviosIniciales={JSON.parse(JSON.stringify(envios))}
-          puntos={puntos.map((p) => ({ id: p.id, nombre: p.nombre, municipio: p.municipio }))}
+          solicitudesIniciales={JSON.parse(JSON.stringify(solicitudes))}
+          puntos={puntosOpciones}
           puedeEliminar={puedeEliminar(session?.user?.role)}
         />
       </div>

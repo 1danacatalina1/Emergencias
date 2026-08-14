@@ -380,6 +380,7 @@ export const donationCreateSchema = z.object({
   telefonoDonante: z.string().min(7, "Indica un teléfono de contacto").max(TELEFONO_MAX),
   tipoAyuda: tipoAyudaEnum.default("OTRO"),
   descripcion: z.string().min(5, "Describe qué quieres donar").max(TEXTO_LARGO_MAX),
+  insumo: z.string().max(NOMBRE_MAX).optional().nullable(),
   cantidad: z.coerce.number().int().min(1).max(1_000_000).optional().nullable(),
   unidad: z.string().max(NOMBRE_MAX).optional().nullable(),
   direccion: z.string().max(TEXTO_CORTO_MAX).optional().nullable(),
@@ -392,6 +393,7 @@ export const donationCreateSchema = z.object({
 export const donationUpdateSchema = z.object({
   tipoAyuda: tipoAyudaEnum.optional(),
   descripcion: z.string().min(5).max(TEXTO_LARGO_MAX).optional(),
+  insumo: z.string().max(NOMBRE_MAX).optional().nullable(),
   cantidad: z.coerce.number().int().min(1).max(1_000_000).optional().nullable(),
   unidad: z.string().max(NOMBRE_MAX).optional().nullable(),
   estado: estadoDonacionEnum.optional(),
@@ -422,10 +424,26 @@ export const envioCreateSchema = z.object({
   conductorTelefono: z.string().max(TELEFONO_MAX).optional().nullable(),
   notas: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
   items: z.array(envioItemSchema).min(1, "Agrega al menos un insumo"),
+  solicitudInsumoId: z.string().optional().nullable(),
 });
 
 export const envioUpdateSchema = z.object({
   estado: estadoEnvioEnum.optional(),
+});
+
+// Solicitudes de insumos entre puntos de acopio (panel, requiere sesión)
+export const estadoSolicitudInsumoEnum = z.enum(["ABIERTA", "RESUELTA", "CANCELADA"]);
+
+export const solicitudInsumoCreateSchema = z.object({
+  donationPointId: z.string().min(1, "Selecciona el punto de acopio que necesita el insumo"),
+  insumo: z.string().min(1, "Indica el insumo que necesitas").max(NOMBRE_MAX),
+  cantidad: z.coerce.number().int().min(1, "La cantidad debe ser al menos 1").max(1_000_000),
+  unidad: z.string().max(NOMBRE_MAX).optional().nullable(),
+  notas: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
+});
+
+export const solicitudInsumoUpdateSchema = z.object({
+  estado: estadoSolicitudInsumoEnum,
 });
 
 // Reportar persona desaparecida (público)

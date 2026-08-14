@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Boton, Campo, Etiqueta, Seleccion, Tarjeta } from "@/components/ui/campos";
 import { InsigniaEstado } from "@/components/ui/insignias";
 import BotonEliminar from "@/components/ui/BotonEliminar";
@@ -50,14 +50,26 @@ interface Envio {
 
 const ITEM_VACIO: ItemForm = { insumo: "", cantidad: "", unidad: "unidades" };
 
+export interface PrefillEnvio {
+  destinatarioNombre: string;
+  destinoLugar: string;
+  destinoMunicipio?: string;
+  items: ItemForm[];
+  solicitudInsumoId: string;
+}
+
 export default function EnviosPanel({
   enviosIniciales,
   puntos,
   puedeEliminar,
+  prefill,
+  onPrefillConsumido,
 }: {
   enviosIniciales: Envio[];
   puntos: PuntoOpcion[];
   puedeEliminar: boolean;
+  prefill?: PrefillEnvio | null;
+  onPrefillConsumido?: () => void;
 }) {
   const [envios, setEnvios] = useState(enviosIniciales);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -76,9 +88,30 @@ export default function EnviosPanel({
   const [conductorTelefono, setConductorTelefono] = useState("");
   const [notas, setNotas] = useState("");
   const [items, setItems] = useState<ItemForm[]>([{ ...ITEM_VACIO }]);
+  const [solicitudInsumoId, setSolicitudInsumoId] = useState<string | null>(null);
 
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [advertencias, setAdvertencias] = useState<string[]>([]);
+  const [prefillProcesado, setPrefillProcesado] = useState<PrefillEnvio | null | undefined>(undefined);
+
+  // Ajusta el formulario cuando llega un prefill nuevo (patrón recomendado por React
+  // para derivar estado de un prop que cambia, en vez de hacerlo en un efecto).
+  if (prefill && prefill !== prefillProcesado) {
+    setPrefillProcesado(prefill);
+    setDestinatarioNombre(prefill.destinatarioNombre);
+    setDestinoLugar(prefill.destinoLugar);
+    setDestinoMunicipio(prefill.destinoMunicipio ?? "");
+    setItems(prefill.items);
+    setSolicitudInsumoId(prefill.solicitudInsumoId);
+    setMostrarFormulario(true);
+  }
+
+  useEffect(() => {
+    if (!prefill) return;
+    document.getElementById("formulario-envio")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    onPrefillConsumido?.();
+  }, [prefill, onPrefillConsumido]);
 
   function limpiarFormulario() {
     setDestinatarioNombre("");
@@ -94,6 +127,7 @@ export default function EnviosPanel({
     setConductorTelefono("");
     setNotas("");
     setItems([{ ...ITEM_VACIO }]);
+    setSolicitudInsumoId(null);
   }
 
   function actualizarItem(idx: number, campo: keyof ItemForm, valor: string) {
@@ -125,6 +159,7 @@ export default function EnviosPanel({
           items: items
             .filter((it) => it.insumo.trim() && it.cantidad)
             .map((it) => ({ insumo: it.insumo, cantidad: Number(it.cantidad), unidad: it.unidad || undefined })),
+          solicitudInsumoId: solicitudInsumoId || undefined,
         }),
       });
       const data = await res.json();
@@ -133,6 +168,7 @@ export default function EnviosPanel({
         return;
       }
       setEnvios((prev) => [data, ...prev]);
+      if (data.advertenciasInventario?.length) setAdvertencias(data.advertenciasInventario);
       limpiarFormulario();
       setMostrarFormulario(false);
     } catch {
@@ -152,13 +188,25 @@ export default function EnviosPanel({
   }
 
   return (
-    <div className="mt-3 flex flex-col gap-4">
+    <div id="formulario-envio" className="mt-3 flex flex-col gap-4">
       <datalist id="insumos-sugeridos">
         {INSUMOS_SUGERIDOS.map((i) => <option key={i} value={i} />)}
       </datalist>
       <datalist id="unidades-sugeridas">
         {UNIDADES_SUGERIDAS.map((u) => <option key={u} value={u} />)}
       </datalist>
+
+      {advertencias.length > 0 && (
+        <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+          <p className="font-semibold">⚠️ El envío se registró, pero revisa el inventario:</p>
+          <ul className="mt-1 list-disc pl-5">
+            {advertencias.map((a) => <li key={a}>{a}</li>)}
+          </ul>
+          <button type="button" onClick={() => setAdvertencias([])} className="mt-2 text-xs font-semibold underline">
+            Ocultar aviso
+          </button>
+        </div>
+      )}
 
       {puntos.length === 0 ? (
         <Tarjeta className="p-4 text-sm text-muted">
@@ -172,6 +220,12 @@ export default function EnviosPanel({
         <Tarjeta className="p-4">
           <form onSubmit={crearEnvio} className="flex flex-col gap-4">
             {error && <div className="rounded-xl bg-red-50 p-3 text-sm font-medium text-emergency">{error}</div>}
+            {solicitudInsumoId && (
+              <div className="rounded-xl bg-primary/5 p-3 text-sm text-primary">
+                Estás respondiendo a una solicitud de otro punto de acopio. Elige desde cuál de tus
+                puntos vas a enviar el insumo.
+              </div>
+            )}
 
             <div>
               <Etiqueta htmlFor="punto-origen">Punto de acopio de origen *</Etiqueta>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Boton, Campo, AreaTexto, Seleccion, Etiqueta, ErrorCampo, Tarjeta } from "@/components/ui/campos";
-import { TIPOS_AYUDA, UNIDADES_SUGERIDAS } from "@/lib/catalogos";
+import { TIPOS_AYUDA, INSUMOS_SUGERIDOS, UNIDADES_SUGERIDAS } from "@/lib/catalogos";
 import { CheckboxPrivacidad } from "@/components/AvisoPrivacidad";
 
 interface PuntoOpcion {
@@ -19,6 +19,7 @@ export default function FormularioDonacion() {
   const [telefonoDonante, setTelefonoDonante] = useState("");
   const [tipoAyuda, setTipoAyuda] = useState("ALIMENTOS");
   const [descripcion, setDescripcion] = useState("");
+  const [insumo, setInsumo] = useState("");
   const [cantidad, setCantidad] = useState("");
   const [unidad, setUnidad] = useState("");
   const [municipio, setMunicipio] = useState("");
@@ -53,6 +54,7 @@ export default function FormularioDonacion() {
           telefonoDonante,
           tipoAyuda,
           descripcion,
+          insumo: insumo || undefined,
           cantidad: cantidad || undefined,
           unidad: unidad || undefined,
           direccion: direccion || undefined,
@@ -130,6 +132,15 @@ export default function FormularioDonacion() {
             required
           />
           <ErrorCampo mensaje={errores.descripcion} />
+        </div>
+
+        <div className="mt-4">
+          <Etiqueta htmlFor="insumo">Insumo específico (opcional)</Etiqueta>
+          <Campo id="insumo" list="insumos-donacion" value={insumo} onChange={(e) => setInsumo(e.target.value)} placeholder="Ej. Arroz, agua embotellada…" />
+          <datalist id="insumos-donacion">
+            {INSUMOS_SUGERIDOS.map((i) => <option key={i} value={i} />)}
+          </datalist>
+          <p className="mt-1 text-xs text-muted">Ayuda al punto de acopio a llevar el control exacto de lo que reciben.</p>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3">

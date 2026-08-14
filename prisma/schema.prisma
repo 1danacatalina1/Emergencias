@@ -84,6 +84,7 @@ model User {
   aidRequestsUpdated    AidRequest[]      @relation("AidRequestUpdatedBy")
   donationPointsCreated DonationPoint[]   @relation("DonationPointCreatedBy")
   enviosCreados         Envio[]           @relation("EnvioCreatedBy")
+  solicitudesCreadas    SolicitudInsumo[] @relation("SolicitudInsumoCreatedBy")
   donationsCreated      Donation[]        @relation("DonationCreatedBy")
   donationsUpdated      Donation[]        @relation("DonationUpdatedBy")
   petsCreated           Pet[]             @relation("PetCreatedBy")
@@ -466,8 +467,10 @@ model DonationPoint {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  donaciones Donation[]
-  envios     Envio[]
+  donaciones  Donation[]
+  envios      Envio[]
+  inventario  InventarioItem[]
+  solicitudes SolicitudInsumo[]
 
   @@index([estado])
   @@index([municipio])
@@ -489,6 +492,7 @@ model Donation {
   telefonoDonante String
   tipoAyuda       TipoAyuda @default(OTRO)
   descripcion     String
+  insumo          String?
   cantidad        Int?
   unidad          String?
 
@@ -552,6 +556,9 @@ model Envio {
 
   items EnvioItem[]
 
+  solicitudInsumoId String?         @unique
+  solicitudInsumo   SolicitudInsumo? @relation(fields: [solicitudInsumoId], references: [id])
+
   creadoPorId String?
   creadoPor   User?   @relation("EnvioCreatedBy", fields: [creadoPorId], references: [id])
 
@@ -575,6 +582,62 @@ model EnvioItem {
 
   @@index([envioId])
   @@map("envio_items")
+}
+
+// ---------------------------------------------------------------------------
+// Inventario por punto de acopio (existencias calculadas: sube al recibir
+// donaciones, baja al despachar envíos) y solicitudes de apoyo entre puntos.
+// ---------------------------------------------------------------------------
+
+model InventarioItem {
+  id String @id @default(cuid())
+
+  donationPointId String
+  donationPoint   DonationPoint @relation(fields: [donationPointId], references: [id])
+
+  insumo   String
+  cantidad Int     @default(0)
+  unidad   String?
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([donationPointId, insumo])
+  @@index([donationPointId])
+  @@map("inventario_items")
+}
+
+enum EstadoSolicitudInsumo {
+  ABIERTA
+  RESUELTA
+  CANCELADA
+}
+
+model SolicitudInsumo {
+  id     String @id @default(cuid())
+  codigo String @unique
+
+  donationPointId String
+  donationPoint   DonationPoint @relation(fields: [donationPointId], references: [id])
+
+  insumo   String
+  cantidad Int
+  unidad   String?
+  notas    String?
+
+  estado EstadoSolicitudInsumo @default(ABIERTA)
+
+  envio Envio?
+
+  creadoPorId String?
+  creadoPor   User?   @relation("SolicitudInsumoCreatedBy", fields: [creadoPorId], references: [id])
+
+  resueltaEn DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([donationPointId])
+  @@index([estado])
+  @@map("solicitudes_insumo")
 }
 
 // ---------------------------------------------------------------------------

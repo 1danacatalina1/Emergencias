@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Tarjeta, Seleccion, Campo } from "@/components/ui/campos";
 import { InsigniaEstado } from "@/components/ui/insignias";
 import BotonEliminar from "@/components/ui/BotonEliminar";
+import { INSUMOS_SUGERIDOS, UNIDADES_SUGERIDAS } from "@/lib/catalogos";
 
 const ESTADOS = ["OFRECIDA", "CONFIRMADA", "RECIBIDA", "CANCELADA"];
 
@@ -14,6 +15,7 @@ interface Donacion {
   telefonoDonante: string;
   tipoAyuda: string;
   descripcion: string;
+  insumo: string | null;
   cantidad: number | null;
   unidad: string | null;
   municipio: string;
@@ -35,14 +37,32 @@ export default function DonacionesLista({ donaciones, puedeEliminar }: { donacio
 
   return (
     <div className="mt-3 flex flex-col gap-2">
+      <datalist id="insumos-donacion-lista">
+        {INSUMOS_SUGERIDOS.map((i) => <option key={i} value={i} />)}
+      </datalist>
+      <datalist id="unidades-donacion-lista">
+        {UNIDADES_SUGERIDAS.map((u) => <option key={u} value={u} />)}
+      </datalist>
+
       {lista.map((d) => (
         <Tarjeta key={d.id} className="flex flex-wrap items-center justify-between gap-3 p-3.5">
           <div className="min-w-0">
             <p className="font-mono text-xs font-bold text-primary">{d.codigo}</p>
             <p className="text-sm font-bold">{d.tipoAyuda} · {d.nombreDonante}</p>
             <p className="text-xs text-muted">{d.descripcion} — {d.municipio} · {d.telefonoDonante}</p>
-            {d.donationPoint && <p className="text-xs font-semibold text-primary">→ {d.donationPoint.nombre}</p>}
-            <div className="mt-2 flex items-center gap-2">
+            {d.donationPoint ? (
+              <p className="text-xs font-semibold text-primary">→ {d.donationPoint.nombre}</p>
+            ) : (
+              <p className="text-xs text-muted">Sin punto de acopio asignado — no sumará al inventario</p>
+            )}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <input
+                list="insumos-donacion-lista"
+                placeholder="Insumo específico"
+                defaultValue={d.insumo ?? ""}
+                onBlur={(e) => actualizar(d.id, { insumo: e.target.value || null })}
+                className="w-40 rounded-lg border border-border px-2 py-1.5 text-xs"
+              />
               <Campo
                 type="number"
                 min={1}
@@ -52,12 +72,12 @@ export default function DonacionesLista({ donaciones, puedeEliminar }: { donacio
                 onBlur={(e) => actualizar(d.id, { cantidad: e.target.value ? Number(e.target.value) : null })}
                 className="w-24 py-1.5 text-xs"
               />
-              <Campo
+              <input
+                list="unidades-donacion-lista"
                 placeholder="Unidad (kg, cajas…)"
-                value={d.unidad ?? ""}
-                onChange={(e) => setLista((prev) => prev.map((x) => (x.id === d.id ? { ...x, unidad: e.target.value } : x)))}
+                defaultValue={d.unidad ?? ""}
                 onBlur={(e) => actualizar(d.id, { unidad: e.target.value || null })}
-                className="w-36 py-1.5 text-xs"
+                className="w-36 rounded-lg border border-border px-2 py-1.5 text-xs"
               />
             </div>
           </div>

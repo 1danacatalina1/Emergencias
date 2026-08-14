@@ -54,6 +54,8 @@ const COLORES_ESTADO: Record<string, string> = {
   PREPARADO: "bg-blue-100 text-blue-800",
   EN_TRANSITO: "bg-amber-100 text-amber-800",
   ENTREGADO: "bg-emerald-100 text-emerald-800",
+  ABIERTA: "bg-blue-100 text-blue-800",
+  RESUELTA: "bg-emerald-100 text-emerald-800",
 };
 
 const ETIQUETAS: Record<string, string> = {
@@ -91,6 +93,8 @@ const ETIQUETAS: Record<string, string> = {
   PREPARADO: "Preparado",
   EN_TRANSITO: "En tránsito",
   ENTREGADO: "Entregado",
+  ABIERTA: "Abierta",
+  RESUELTA: "Resuelta",
 };
 
 export function InsigniaEstado({ estado }: { estado: string }) {
