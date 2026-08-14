@@ -42,13 +42,33 @@ export function obtenerIpDeSolicitud(request: NextRequest): string {
   return request.headers.get("x-real-ip") ?? "desconocida";
 }
 
+// Si Upstash no responde a tiempo (o falla), la solicitud se deja pasar en vez de
+// quedarse esperando indefinidamente: en una plataforma de emergencias, que el
+// panel deje de responder es mucho peor que perder momentáneamente este control.
+const TIEMPO_MAXIMO_MS = 1200;
+
 async function aplicarLimite(limiter: Ratelimit | null, ip: string, mensaje: string): Promise<NextResponse | null> {
   if (!limiter) return null;
 
-  const { success, reset } = await limiter.limit(ip);
-  if (success) return null;
+  let resultado: { success: boolean; reset: number } | "tiempoAgotado";
+  try {
+    resultado = await Promise.race([
+      limiter.limit(ip),
+      new Promise<"tiempoAgotado">((resolve) => setTimeout(() => resolve("tiempoAgotado"), TIEMPO_MAXIMO_MS)),
+    ]);
+  } catch (error) {
+    console.error("Rate limit: error consultando Upstash, se permite la solicitud.", error);
+    return null;
+  }
 
-  const segundosEspera = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+  if (resultado === "tiempoAgotado") {
+    console.error("Rate limit: Upstash no respondió a tiempo, se permite la solicitud.");
+    return null;
+  }
+
+  if (resultado.success) return null;
+
+  const segundosEspera = Math.max(1, Math.ceil((resultado.reset - Date.now()) / 1000));
   return NextResponse.json(
     { error: mensaje },
     { status: 429, headers: { "Retry-After": String(segundosEspera) } },

@@ -1,5 +1,6 @@
 import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { after } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
@@ -91,13 +92,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   events: {
     signIn: async ({ user }) => {
       if (!user.id) return;
-      await registrarAuditoria({
-        entidad: "User",
-        entidadId: user.id,
-        accion: "LOGIN",
-        usuarioId: user.id,
-        usuarioNombre: user.name,
-      });
+      // No se espera esta escritura: registrar el inicio de sesión en la bitácora
+      // no debe demorar la respuesta al usuario que está entrando al panel.
+      after(() =>
+        registrarAuditoria({
+          entidad: "User",
+          entidadId: user.id!,
+          accion: "LOGIN",
+          usuarioId: user.id,
+          usuarioNombre: user.name,
+        }).catch((error) => console.error("No se pudo registrar el inicio de sesión en la auditoría", error)),
+      );
     },
   },
 });
