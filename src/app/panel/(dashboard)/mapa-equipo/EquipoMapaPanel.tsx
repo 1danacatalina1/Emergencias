@@ -41,8 +41,8 @@ export default function EquipoMapaPanel() {
   }, [soloMiEquipo]);
 
   return (
-    <div className="mt-4 flex flex-1 flex-col gap-4 md:flex-row">
-      <div className="h-[50vh] flex-1 overflow-hidden rounded-2xl border border-border md:h-full">
+    <div className="mt-4 flex flex-col gap-4 md:flex-row">
+      <div className="h-[50vh] w-full shrink-0 overflow-hidden rounded-2xl border border-border md:h-[70vh] md:flex-1">
         <MapaEquipo usuarios={usuarios} />
       </div>
       <div className="w-full shrink-0 md:w-72">
