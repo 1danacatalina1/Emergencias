@@ -23,6 +23,7 @@ const EQUIPO_UBICACION = { href: "/panel/mi-ubicacion", label: "Mi ubicación", 
 const EQUIPO_SOS = { href: "/panel/sos", label: "Alertas SOS", icono: "🆘" };
 const EQUIPO_MAPA = { href: "/panel/mapa-equipo", label: "Mapa del equipo", icono: "🛰️" };
 const EQUIPO_PROFESIONALES = { href: "/panel/profesionales", label: "Red de profesionales", icono: "🎓" };
+const EQUIPO_VEHICULOS = { href: "/panel/vehiculos", label: "Vehículos", icono: "🚗" };
 const EQUIPO_USUARIOS = { href: "/panel/usuarios", label: "Usuarios", icono: "👥" };
 const EQUIPO_AUDITORIA = { href: "/panel/auditoria", label: "Auditoría", icono: "🕵️" };
 const EQUIPO_INTEGRACIONES = { href: "/panel/integraciones", label: "Integraciones", icono: "🔌" };
@@ -41,7 +42,7 @@ export default function NavPanel({ usuario }: { usuario: { name: string; role: s
 
   let ENLACES_EQUIPO = [EQUIPO_INICIO, EQUIPO_BITACORA, EQUIPO_UBICACION];
   if (puedeVerEquipoDeCampo(usuario.role)) ENLACES_EQUIPO = [...ENLACES_EQUIPO, EQUIPO_SOS];
-  if (puedeVerMapaYProfesionales(usuario.role)) ENLACES_EQUIPO = [...ENLACES_EQUIPO, EQUIPO_MAPA, EQUIPO_PROFESIONALES];
+  if (puedeVerMapaYProfesionales(usuario.role)) ENLACES_EQUIPO = [...ENLACES_EQUIPO, EQUIPO_MAPA, EQUIPO_PROFESIONALES, EQUIPO_VEHICULOS];
   if (puedeGestionarUsuarios(usuario.role)) ENLACES_EQUIPO = [...ENLACES_EQUIPO, EQUIPO_USUARIOS];
   if (puedeAuditarYExportar(usuario.role)) ENLACES_EQUIPO = [...ENLACES_EQUIPO, EQUIPO_AUDITORIA];
   if (puedeGestionarIntegraciones(usuario.role)) ENLACES_EQUIPO = [...ENLACES_EQUIPO, EQUIPO_INTEGRACIONES];

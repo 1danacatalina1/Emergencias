@@ -111,6 +111,10 @@ model User {
   alertasSOS          AlertaSOS[] @relation("AlertaSOSAutor")
   alertasSOSAtendidas AlertaSOS[] @relation("AlertaSOSAtendidaPor")
 
+  vehiculosRegistrados Vehiculo[]           @relation("VehiculoRegistradoPor")
+  vehiculosConduce     VehiculoConductor[]  @relation("VehiculoConductorUsuario")
+  vehiculosViaja       VehiculoPasajero[]   @relation("VehiculoPasajeroUsuario")
+
   @@index([estadoCuenta])
   @@map("users")
 }
@@ -874,6 +878,105 @@ model AuditLog {
   @@index([entidad, entidadId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Vehículos disponibles para movilizar personal e insumos
+// ---------------------------------------------------------------------------
+
+enum TipoVehiculo {
+  CARRO
+  CAMIONETA
+  BUS_BUSETA
+  MOTO
+  CAMION
+  OTRO
+}
+
+enum EstadoVehiculo {
+  DISPONIBLE
+  EN_USO
+  MANTENIMIENTO
+  NO_DISPONIBLE
+}
+
+enum EstadoNecesidadVehiculo {
+  PENDIENTE
+  CUBIERTA
+}
+
+model Vehiculo {
+  id     String       @id @default(cuid())
+  placa  String       @unique
+  tipo   TipoVehiculo @default(CARRO)
+
+  marcaModelo             String?
+  capacidadPersonas       Int?
+  capacidadCargaDescripcion String?
+
+  paraPersonas Boolean @default(true)
+  paraInsumos  Boolean @default(true)
+
+  municipioBase    String?
+  departamentoBase String?
+
+  estado        EstadoVehiculo @default(DISPONIBLE)
+  observaciones String?
+
+  registradoPorId String?
+  registradoPor   User?   @relation("VehiculoRegistradoPor", fields: [registradoPorId], references: [id])
+
+  conductores VehiculoConductor[]
+  pasajeros   VehiculoPasajero[]
+  necesidades NecesidadEconomicaVehiculo[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([estado])
+  @@index([tipo])
+  @@map("vehiculos")
+}
+
+/** Quién está autorizado para conducir/movilizar el vehículo. */
+model VehiculoConductor {
+  id         String   @id @default(cuid())
+  vehiculoId String
+  vehiculo   Vehiculo @relation(fields: [vehiculoId], references: [id], onDelete: Cascade)
+  usuarioId  String
+  usuario    User     @relation("VehiculoConductorUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([vehiculoId, usuarioId])
+  @@map("vehiculo_conductores")
+}
+
+/** Grupo de voluntarios que ese vehículo traslada. */
+model VehiculoPasajero {
+  id         String   @id @default(cuid())
+  vehiculoId String
+  vehiculo   Vehiculo @relation(fields: [vehiculoId], references: [id], onDelete: Cascade)
+  usuarioId  String
+  usuario    User     @relation("VehiculoPasajeroUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([vehiculoId, usuarioId])
+  @@map("vehiculo_pasajeros")
+}
+
+/** Necesidades económicas para lograr el transporte (gasolina, peajes, mantenimiento, etc.). */
+model NecesidadEconomicaVehiculo {
+  id            String                  @id @default(cuid())
+  vehiculoId    String
+  vehiculo      Vehiculo                @relation(fields: [vehiculoId], references: [id], onDelete: Cascade)
+  concepto      String
+  montoEstimado Float?
+  descripcion   String?
+  estado        EstadoNecesidadVehiculo @default(PENDIENTE)
+  createdAt     DateTime                @default(now())
+
+  @@index([vehiculoId])
+  @@map("necesidades_economicas_vehiculo")
 }
 
 // ---------------------------------------------------------------------------

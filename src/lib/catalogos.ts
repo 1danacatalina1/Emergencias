@@ -6,6 +6,22 @@ export const CANALES_SOLICITUD = [
   { value: "OTRO", label: "Otro", icono: "✉️" },
 ] as const;
 
+export const TIPOS_VEHICULO = [
+  { value: "CARRO", label: "Carro particular", icono: "🚗" },
+  { value: "CAMIONETA", label: "Camioneta", icono: "🚙" },
+  { value: "BUS_BUSETA", label: "Bus / buseta", icono: "🚌" },
+  { value: "MOTO", label: "Moto", icono: "🏍️" },
+  { value: "CAMION", label: "Camión de carga", icono: "🚚" },
+  { value: "OTRO", label: "Otro", icono: "🚐" },
+] as const;
+
+export const ESTADOS_VEHICULO = [
+  { value: "DISPONIBLE", label: "Disponible" },
+  { value: "EN_USO", label: "En uso" },
+  { value: "MANTENIMIENTO", label: "En mantenimiento" },
+  { value: "NO_DISPONIBLE", label: "No disponible" },
+] as const;
+
 export const TIPOS_AYUDA = [
   { value: "ALIMENTOS", label: "Alimentos" },
   { value: "AGUA", label: "Agua potable" },

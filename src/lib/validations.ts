@@ -524,3 +524,53 @@ export const petUpdateSchema = z.object({
   descripcion: z.string().min(5).max(TEXTO_LARGO_MAX).optional(),
   estado: estadoMascotaEnum.optional(),
 });
+
+// Vehículos disponibles para movilizar personal e insumos (panel, equipo)
+export const tipoVehiculoEnum = z.enum(["CARRO", "CAMIONETA", "BUS_BUSETA", "MOTO", "CAMION", "OTRO"]);
+export const estadoVehiculoEnum = z.enum(["DISPONIBLE", "EN_USO", "MANTENIMIENTO", "NO_DISPONIBLE"]);
+export const estadoNecesidadVehiculoEnum = z.enum(["PENDIENTE", "CUBIERTA"]);
+
+export const vehiculoCreateSchema = z.object({
+  placa: z.string().min(3, "Indica la placa del vehículo").max(20),
+  tipo: tipoVehiculoEnum.default("CARRO"),
+  marcaModelo: z.string().max(NOMBRE_MAX).optional().nullable(),
+  capacidadPersonas: z.coerce.number().int().min(0).max(200).optional().nullable(),
+  capacidadCargaDescripcion: z.string().max(TEXTO_CORTO_MAX).optional().nullable(),
+  paraPersonas: z.boolean().default(true),
+  paraInsumos: z.boolean().default(true),
+  municipioBase: z.string().max(NOMBRE_MAX).optional().nullable(),
+  departamentoBase: z.string().max(NOMBRE_MAX).optional().nullable(),
+  observaciones: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
+});
+
+export const vehiculoUpdateSchema = z.object({
+  placa: z.string().min(3).max(20).optional(),
+  tipo: tipoVehiculoEnum.optional(),
+  marcaModelo: z.string().max(NOMBRE_MAX).optional().nullable(),
+  capacidadPersonas: z.coerce.number().int().min(0).max(200).optional().nullable(),
+  capacidadCargaDescripcion: z.string().max(TEXTO_CORTO_MAX).optional().nullable(),
+  paraPersonas: z.boolean().optional(),
+  paraInsumos: z.boolean().optional(),
+  municipioBase: z.string().max(NOMBRE_MAX).optional().nullable(),
+  departamentoBase: z.string().max(NOMBRE_MAX).optional().nullable(),
+  estado: estadoVehiculoEnum.optional(),
+  observaciones: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
+});
+
+export const vehiculoEquipoSchema = z.object({
+  conductoresIds: z.array(z.string()).max(100),
+  pasajerosIds: z.array(z.string()).max(100),
+});
+
+export const necesidadEconomicaCreateSchema = z.object({
+  concepto: z.string().min(2, "Indica el concepto (ej. gasolina, peajes)").max(NOMBRE_MAX),
+  montoEstimado: z.coerce.number().min(0).max(1_000_000_000).optional().nullable(),
+  descripcion: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
+});
+
+export const necesidadEconomicaUpdateSchema = z.object({
+  concepto: z.string().min(2).max(NOMBRE_MAX).optional(),
+  montoEstimado: z.coerce.number().min(0).max(1_000_000_000).optional().nullable(),
+  descripcion: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
+  estado: estadoNecesidadVehiculoEnum.optional(),
+});
