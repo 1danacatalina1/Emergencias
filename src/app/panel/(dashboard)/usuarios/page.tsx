@@ -22,7 +22,7 @@ export default async function UsuariosPage() {
     );
   }
 
-  const [usuarios, seguidos, coordinadores] = await Promise.all([
+  const [usuarios, seguidos, coordinadores, solicitudesEquipo] = await Promise.all([
     prisma.user.findMany({
       select: {
         id: true,
@@ -51,13 +51,32 @@ export default async function UsuariosPage() {
       orderBy: { createdAt: "desc" },
     }),
     prisma.seguimientoEquipo.findMany({
-      where: { coordinadorId: session!.user.id },
+      where: { coordinadorId: session!.user.id, estado: "ACEPTADO" },
       select: { voluntarioId: true },
     }),
     prisma.user.findMany({
       where: { role: { in: ["ADMIN", "COORDINADOR"] }, active: true, estadoCuenta: "APROBADA" },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
+    }),
+    prisma.seguimientoEquipo.findMany({
+      where: { coordinadorId: session!.user.id, estado: "PENDIENTE" },
+      select: {
+        id: true,
+        createdAt: true,
+        voluntario: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            telefono: true,
+            tipoColaborador: true,
+            lugarAccionMunicipio: true,
+            lugarAccionDepartamento: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "asc" },
     }),
   ]);
 
@@ -77,6 +96,7 @@ export default async function UsuariosPage() {
         esAdmin={esAdministrador(session!.user.role)}
         seguidosIniciales={seguidos.map((s) => s.voluntarioId)}
         coordinadores={coordinadores}
+        solicitudesEquipoIniciales={JSON.parse(JSON.stringify(solicitudesEquipo))}
       />
     </div>
   );

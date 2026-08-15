@@ -53,6 +53,20 @@ interface Coordinador {
   name: string;
 }
 
+interface SolicitudEquipo {
+  id: string;
+  createdAt: string;
+  voluntario: {
+    id: string;
+    name: string;
+    email: string;
+    telefono: string | null;
+    tipoColaborador: string | null;
+    lugarAccionMunicipio: string | null;
+    lugarAccionDepartamento: string | null;
+  };
+}
+
 function CredencialTemporal({ etiqueta, valor, onCerrar }: { etiqueta: string; valor: string; onCerrar: () => void }) {
   const [copiado, setCopiado] = useState(false);
   return (
@@ -178,18 +192,70 @@ function SolicitudPendiente({
   );
 }
 
+function SolicitudEquipoPendiente({
+  solicitud,
+  onAceptar,
+  onRechazar,
+}: {
+  solicitud: SolicitudEquipo;
+  onAceptar: (id: string) => void;
+  onRechazar: (id: string) => void;
+}) {
+  const [procesando, setProcesando] = useState(false);
+  const v = solicitud.voluntario;
+
+  return (
+    <Tarjeta className="border-primary/30 bg-primary/5 p-3.5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-bold">{v.name}</p>
+          <p className="text-xs text-muted">{v.email} {v.telefono && `· ${v.telefono}`}</p>
+          {v.tipoColaborador && <p className="mt-1 text-xs font-semibold text-primary">{etiquetaColaborador(v.tipoColaborador)}</p>}
+          {(v.lugarAccionMunicipio || v.lugarAccionDepartamento) && (
+            <p className="mt-1 text-xs text-muted">
+              📍 {[v.lugarAccionMunicipio, v.lugarAccionDepartamento].filter(Boolean).join(", ")}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-muted">Solicitado {formatearFechaHora(solicitud.createdAt)}</p>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Boton
+          type="button"
+          className="w-auto px-4 py-1.5 text-xs"
+          disabled={procesando}
+          onClick={async () => { setProcesando(true); await onAceptar(solicitud.id); setProcesando(false); }}
+        >
+          Aceptar en mi equipo
+        </Boton>
+        <Boton
+          type="button"
+          variante="secundario"
+          className="w-auto px-4 py-1.5 text-xs text-emergency"
+          disabled={procesando}
+          onClick={async () => { setProcesando(true); await onRechazar(solicitud.id); setProcesando(false); }}
+        >
+          Rechazar
+        </Boton>
+      </div>
+    </Tarjeta>
+  );
+}
+
 export default function UsuariosPanel({
   usuariosIniciales,
   usuarioActualId,
   esAdmin,
   seguidosIniciales,
   coordinadores,
+  solicitudesEquipoIniciales,
 }: {
   usuariosIniciales: Usuario[];
   usuarioActualId: string;
   esAdmin: boolean;
   seguidosIniciales: string[];
   coordinadores: Coordinador[];
+  solicitudesEquipoIniciales: SolicitudEquipo[];
 }) {
   const [usuarios, setUsuarios] = useState(usuariosIniciales);
   const [name, setName] = useState("");
@@ -203,6 +269,7 @@ export default function UsuariosPanel({
   const [soloMiEquipo, setSoloMiEquipo] = useState(false);
   const [expandidos, setExpandidos] = useState(new Set<string>());
   const [coordinadorExportar, setCoordinadorExportar] = useState("");
+  const [solicitudesEquipo, setSolicitudesEquipo] = useState(solicitudesEquipoIniciales);
 
   const rolesDisponibles = esAdmin ? ROLES : ROLES.filter((r) => r.value !== "ADMIN");
 
@@ -329,6 +396,23 @@ export default function UsuariosPanel({
     }
   }
 
+  async function responderSolicitudEquipo(id: string, aceptar: boolean, voluntarioId: string) {
+    const res = await fetch(`/api/equipo/solicitudes/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ aceptar }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      window.alert(data.error ?? "No se pudo responder la solicitud");
+      return;
+    }
+    setSolicitudesEquipo((prev) => prev.filter((s) => s.id !== id));
+    if (aceptar) {
+      setSeguidos((prev) => new Set(prev).add(voluntarioId));
+    }
+  }
+
   function alternarExpandido(id: string) {
     setExpandidos((prev) => {
       const copia = new Set(prev);
@@ -345,6 +429,25 @@ export default function UsuariosPanel({
           <div className="mt-3 flex flex-col gap-2">
             {pendientes.map((u) => (
               <SolicitudPendiente key={u.id} usuario={u} rolesDisponibles={rolesDisponibles} onAprobar={aprobar} onRechazar={rechazar} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {solicitudesEquipo.length > 0 && (
+        <div>
+          <h2 className="font-bold text-primary">Solicitudes para unirse a tu equipo ({solicitudesEquipo.length})</h2>
+          <p className="mt-1 text-xs text-muted">
+            Voluntarios que te encontraron en el mapa del equipo y pidieron unirse.
+          </p>
+          <div className="mt-3 flex flex-col gap-2">
+            {solicitudesEquipo.map((s) => (
+              <SolicitudEquipoPendiente
+                key={s.id}
+                solicitud={s}
+                onAceptar={(id) => responderSolicitudEquipo(id, true, s.voluntario.id)}
+                onRechazar={(id) => responderSolicitudEquipo(id, false, s.voluntario.id)}
+              />
             ))}
           </div>
         </div>
@@ -432,19 +535,20 @@ export default function UsuariosPanel({
             const esAdminBloqueado = u.role === "ADMIN" && !esAdmin;
             const expandido = expandidos.has(u.id);
             return (
-              <Tarjeta key={u.id} className="p-3.5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+              <Tarjeta key={u.id} className="relative p-3.5">
+                {!esUno && (
+                  <button
+                    type="button"
+                    onClick={() => alternarSeguido(u.id)}
+                    title={seguidos.has(u.id) ? "Quitar de mi equipo" : "Agregar a mi equipo"}
+                    aria-label={seguidos.has(u.id) ? "Quitar de mi equipo" : "Agregar a mi equipo"}
+                    className="absolute right-2 top-2 rounded-full p-1.5 text-2xl leading-none transition active:scale-90"
+                  >
+                    <span className={seguidos.has(u.id) ? "" : "opacity-25 grayscale"}>⭐</span>
+                  </button>
+                )}
+                <div className="flex flex-wrap items-center justify-between gap-3 pr-10">
                   <div className="flex min-w-0 items-start gap-2">
-                    {!esUno && (
-                      <button
-                        type="button"
-                        onClick={() => alternarSeguido(u.id)}
-                        title={seguidos.has(u.id) ? "Quitar de mi equipo" : "Agregar a mi equipo"}
-                        className={`mt-0.5 shrink-0 text-lg ${seguidos.has(u.id) ? "text-warning" : "text-black/20"}`}
-                      >
-                        {seguidos.has(u.id) ? "★" : "☆"}
-                      </button>
-                    )}
                     <button type="button" onClick={() => alternarExpandido(u.id)} className="min-w-0 text-left">
                       <p className="text-sm font-bold">
                         {u.name} {esUno && <span className="font-normal text-muted">(tú)</span>}

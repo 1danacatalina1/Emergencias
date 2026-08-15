@@ -15,14 +15,19 @@ export async function GET() {
   }
 
   const seguidos = await prisma.seguimientoEquipo.findMany({
-    where: { coordinadorId: session.user.id },
+    where: { coordinadorId: session.user.id, estado: "ACEPTADO" },
     select: { voluntarioId: true },
   });
 
   return NextResponse.json(seguidos.map((s) => s.voluntarioId));
 }
 
-/** Alterna (agrega o quita) a un voluntario de "mi equipo" para el usuario actual. */
+/**
+ * Alterna (agrega o quita) a un voluntario de "mi equipo" para el usuario actual.
+ * Si el voluntario ya había enviado una solicitud (PENDIENTE) o se le había
+ * rechazado antes, marcar la estrella la deja en ACEPTADO en vez de crear una
+ * fila duplicada.
+ */
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) {
@@ -42,13 +47,17 @@ export async function POST(request: Request) {
     where: { coordinadorId_voluntarioId: { coordinadorId: session.user.id, voluntarioId: parsed.data.usuarioId } },
   });
 
-  if (existente) {
+  if (existente?.estado === "ACEPTADO") {
     await prisma.seguimientoEquipo.delete({ where: { id: existente.id } });
     return NextResponse.json({ siguiendo: false });
   }
 
-  await prisma.seguimientoEquipo.create({
-    data: { coordinadorId: session.user.id, voluntarioId: parsed.data.usuarioId },
-  });
+  if (existente) {
+    await prisma.seguimientoEquipo.update({ where: { id: existente.id }, data: { estado: "ACEPTADO" } });
+  } else {
+    await prisma.seguimientoEquipo.create({
+      data: { coordinadorId: session.user.id, voluntarioId: parsed.data.usuarioId, estado: "ACEPTADO" },
+    });
+  }
   return NextResponse.json({ siguiendo: true });
 }

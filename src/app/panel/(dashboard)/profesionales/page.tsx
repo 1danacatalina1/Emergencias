@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { puedeVerEquipoDeCampo } from "@/lib/permisos";
+import { puedeVerMapaYProfesionales } from "@/lib/permisos";
 import { TIPOS_COLABORADOR_ORGANIZACION } from "@/lib/catalogos";
 import { Tarjeta } from "@/components/ui/campos";
 import ProfesionalesLista from "./ProfesionalesLista";
@@ -10,13 +10,13 @@ export const dynamic = "force-dynamic";
 export default async function ProfesionalesPage() {
   const session = await auth();
 
-  if (!puedeVerEquipoDeCampo(session?.user?.role)) {
+  if (!puedeVerMapaYProfesionales(session?.user?.role)) {
     return (
       <div>
         <h1 className="text-xl font-bold">Red de profesionales</h1>
         <Tarjeta className="mt-4 p-4">
           <p className="text-sm text-muted">
-            Esta sección está restringida al Administrador y a Coordinadores.
+            Esta sección está restringida a cuentas aprobadas del panel.
           </p>
         </Tarjeta>
       </div>

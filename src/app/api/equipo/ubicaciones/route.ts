@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { puedeVerEquipoDeCampo } from "@/lib/permisos";
+import { puedeVerMapaYProfesionales } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
-  if (!puedeVerEquipoDeCampo(session.user.role)) {
+  if (!puedeVerMapaYProfesionales(session.user.role)) {
     return NextResponse.json({ error: "Tu rol no tiene permiso para ver la ubicación del equipo" }, { status: 403 });
   }
 
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   let idsPermitidos: string[] | undefined;
   if (soloMiEquipo) {
     const seguidos = await prisma.seguimientoEquipo.findMany({
-      where: { coordinadorId: session.user.id },
+      where: { coordinadorId: session.user.id, estado: "ACEPTADO" },
       select: { voluntarioId: true },
     });
     idsPermitidos = seguidos.map((s) => s.voluntarioId);

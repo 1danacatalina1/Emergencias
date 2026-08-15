@@ -749,8 +749,18 @@ model RegistroBitacora {
 /**
  * Permite a un Administrador o Coordinador marcar qué voluntarios/rescatistas
  * prefiere seguir de cerca, para filtrar la lista de usuarios y el mapa del
- * equipo a "mi equipo" en vez de ver a todo el mundo.
+ * equipo a "mi equipo" en vez de ver a todo el mundo. También registra las
+ * solicitudes que un voluntario envía para unirse al equipo de un
+ * coordinador específico (estado PENDIENTE hasta que el coordinador
+ * responde). Cuando el coordinador agrega directamente a alguien con la ⭐,
+ * la fila nace en ACEPTADO.
  */
+enum EstadoSeguimientoEquipo {
+  ACEPTADO
+  PENDIENTE
+  RECHAZADO
+}
+
 model SeguimientoEquipo {
   id String @id @default(cuid())
 
@@ -760,10 +770,14 @@ model SeguimientoEquipo {
   voluntarioId String
   voluntario   User   @relation("SeguimientoVoluntario", fields: [voluntarioId], references: [id])
 
+  estado EstadoSeguimientoEquipo @default(ACEPTADO)
+
   createdAt DateTime @default(now())
 
   @@unique([coordinadorId, voluntarioId])
   @@index([coordinadorId])
+  @@index([voluntarioId])
+  @@index([estado])
   @@map("seguimientos_equipo")
 }
 

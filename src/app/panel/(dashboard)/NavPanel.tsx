@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { puedeAuditarYExportar, puedeGestionarIntegraciones, puedeGestionarUsuarios, puedeVerEquipoDeCampo } from "@/lib/permisos";
+import { puedeAuditarYExportar, puedeGestionarIntegraciones, puedeGestionarUsuarios, puedeVerEquipoDeCampo, puedeVerMapaYProfesionales } from "@/lib/permisos";
 import BotonSOS from "@/components/sos/BotonSOS";
 import BotonUbicacion from "@/components/ubicacion/BotonUbicacion";
 
@@ -40,7 +40,8 @@ export default function NavPanel({ usuario }: { usuario: { name: string; role: s
   const [reportesAbierto, setReportesAbierto] = useState(false);
 
   let ENLACES_EQUIPO = [EQUIPO_INICIO, EQUIPO_BITACORA, EQUIPO_UBICACION];
-  if (puedeVerEquipoDeCampo(usuario.role)) ENLACES_EQUIPO = [...ENLACES_EQUIPO, EQUIPO_SOS, EQUIPO_MAPA, EQUIPO_PROFESIONALES];
+  if (puedeVerEquipoDeCampo(usuario.role)) ENLACES_EQUIPO = [...ENLACES_EQUIPO, EQUIPO_SOS];
+  if (puedeVerMapaYProfesionales(usuario.role)) ENLACES_EQUIPO = [...ENLACES_EQUIPO, EQUIPO_MAPA, EQUIPO_PROFESIONALES];
   if (puedeGestionarUsuarios(usuario.role)) ENLACES_EQUIPO = [...ENLACES_EQUIPO, EQUIPO_USUARIOS];
   if (puedeAuditarYExportar(usuario.role)) ENLACES_EQUIPO = [...ENLACES_EQUIPO, EQUIPO_AUDITORIA];
   if (puedeGestionarIntegraciones(usuario.role)) ENLACES_EQUIPO = [...ENLACES_EQUIPO, EQUIPO_INTEGRACIONES];

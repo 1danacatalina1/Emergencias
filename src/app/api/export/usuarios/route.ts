@@ -34,7 +34,7 @@ export async function GET(request: Request) {
   let nombreCoordinador: string | null = null;
   if (coordinadorId) {
     const [seguidos, coordinador] = await Promise.all([
-      prisma.seguimientoEquipo.findMany({ where: { coordinadorId }, select: { voluntarioId: true } }),
+      prisma.seguimientoEquipo.findMany({ where: { coordinadorId, estado: "ACEPTADO" }, select: { voluntarioId: true } }),
       prisma.user.findUnique({ where: { id: coordinadorId }, select: { name: true } }),
     ]);
     idsPermitidos = seguidos.map((s) => s.voluntarioId);

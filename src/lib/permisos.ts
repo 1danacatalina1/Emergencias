@@ -48,3 +48,14 @@ export function esAdministrador(rol?: string | null): boolean {
 export function puedeVerEquipoDeCampo(rol?: string | null): boolean {
   return rol === "ADMIN" || rol === "COORDINADOR";
 }
+
+/**
+ * El mapa del equipo y la red de profesionales también están abiertos a los
+ * Voluntarios, para que puedan ubicar a su coordinador y a otros perfiles de
+ * apoyo, y solicitar unirse a un equipo de trabajo. A diferencia de la
+ * bitácora completa y las alertas SOS (ver puedeVerEquipoDeCampo), que
+ * siguen reservadas a quienes coordinan.
+ */
+export function puedeVerMapaYProfesionales(rol?: string | null): boolean {
+  return rol === "ADMIN" || rol === "COORDINADOR" || rol === "OPERADOR";
+}

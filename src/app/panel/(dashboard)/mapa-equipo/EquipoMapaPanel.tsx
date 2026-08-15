@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Campo, Tarjeta } from "@/components/ui/campos";
+import { Boton, Campo, Tarjeta } from "@/components/ui/campos";
+import { puedeGestionarUsuarios } from "@/lib/permisos";
 import MapaEquipo from "@/components/mapa/MapaEquipoDinamico";
 import type { UbicacionUsuarioMapa } from "@/components/mapa/MapaEquipo";
 import { TIPOS_COLABORADOR } from "@/lib/catalogos";
@@ -29,18 +30,39 @@ interface Miembro {
   compartirUbicacion: boolean;
 }
 
+interface Coordinador {
+  id: string;
+  name: string;
+  telefono: string | null;
+  tipoColaborador: string | null;
+}
+
 export default function EquipoMapaPanel({
   rosterInicial,
   seguidosIniciales,
+  coordinadores,
+  misSolicitudesIniciales,
+  usuarioActualId,
+  rolActual,
 }: {
   rosterInicial: Miembro[];
   seguidosIniciales: string[];
+  coordinadores: Coordinador[];
+  misSolicitudesIniciales: { coordinadorId: string; estado: string }[];
+  usuarioActualId: string;
+  rolActual: string;
 }) {
+  const esCoordinador = puedeGestionarUsuarios(rolActual);
+
   const [usuarios, setUsuarios] = useState<UbicacionUsuarioMapa[]>([]);
   const [cargando, setCargando] = useState(true);
   const [soloMiEquipo, setSoloMiEquipo] = useState(false);
   const [seguidos, setSeguidos] = useState(new Set(seguidosIniciales));
   const [busqueda, setBusqueda] = useState("");
+  const [misSolicitudes, setMisSolicitudes] = useState<Record<string, string>>(() =>
+    Object.fromEntries(misSolicitudesIniciales.map((s) => [s.coordinadorId, s.estado])),
+  );
+  const [enviandoA, setEnviandoA] = useState<string | null>(null);
 
   useEffect(() => {
     let activo = true;
@@ -77,6 +99,20 @@ export default function EquipoMapaPanel({
         return copia;
       });
     }
+  }
+
+  async function solicitarUnirse(coordinadorId: string) {
+    setEnviandoA(coordinadorId);
+    const res = await fetch("/api/equipo/solicitudes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ coordinadorId }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setMisSolicitudes((prev) => ({ ...prev, [coordinadorId]: data.estado }));
+    }
+    setEnviandoA(null);
   }
 
   const roster = useMemo(() => {
@@ -119,18 +155,68 @@ export default function EquipoMapaPanel({
         </div>
       </div>
 
+      {!esCoordinador && coordinadores.length > 0 && (
+        <div>
+          <h2 className="font-bold">Coordinadores ({coordinadores.length})</h2>
+          <p className="mt-1 text-xs text-muted">
+            Encuentra a tu coordinador y solicita unirte a su equipo de trabajo.
+          </p>
+          <div className="mt-3 flex flex-col gap-2">
+            {coordinadores
+              .filter((c) => c.id !== usuarioActualId)
+              .map((c) => {
+                const estado = misSolicitudes[c.id];
+                return (
+                  <Tarjeta key={c.id} className="p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold">{c.name}</p>
+                        <p className="text-xs font-semibold text-primary">{etiquetaColaborador(c.tipoColaborador)}</p>
+                        {c.telefono && <p className="mt-1 text-xs">📞 {c.telefono}</p>}
+                      </div>
+                      {estado === "ACEPTADO" ? (
+                        <span className="shrink-0 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-800">
+                          ✓ En tu equipo
+                        </span>
+                      ) : estado === "PENDIENTE" ? (
+                        <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-800">
+                          ⏳ Solicitud enviada
+                        </span>
+                      ) : (
+                        <Boton
+                          type="button"
+                          variante="secundario"
+                          className="w-auto shrink-0 px-3 py-1.5 text-xs"
+                          disabled={enviandoA === c.id}
+                          onClick={() => solicitarUnirse(c.id)}
+                        >
+                          {enviandoA === c.id ? "Enviando…" : estado === "RECHAZADO" ? "Solicitar de nuevo" : "Solicitar unirme"}
+                        </Boton>
+                      )}
+                    </div>
+                  </Tarjeta>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-bold">Usuarios registrados ({roster.length})</h2>
-          <label className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-            <input type="checkbox" checked={soloMiEquipo} onChange={(e) => setSoloMiEquipo(e.target.checked)} />
-            Ver solo mi equipo ⭐
-          </label>
+          {esCoordinador && (
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+              <input type="checkbox" checked={soloMiEquipo} onChange={(e) => setSoloMiEquipo(e.target.checked)} />
+              Ver solo mi equipo ⭐
+            </label>
+          )}
         </div>
-        <p className="mt-1 text-xs text-muted">
-          Marca la ⭐ de quienes quieras seguir de cerca. Los que están compartiendo su ubicación en
-          este momento se ven en el mapa de arriba.
-        </p>
+        {esCoordinador && (
+          <p className="mt-1 text-xs text-muted">
+            Marca la ⭐ de quienes quieras seguir de cerca. Los que están compartiendo su ubicación en
+            este momento se ven en el mapa de arriba.
+          </p>
+        )}
         <Campo
           placeholder="Buscar por nombre, tipo o municipio…"
           value={busqueda}
@@ -144,30 +230,29 @@ export default function EquipoMapaPanel({
             </Tarjeta>
           )}
           {roster.map((m) => (
-            <Tarjeta key={m.id} className="p-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-2">
-                  <button
-                    type="button"
-                    onClick={() => alternarSeguido(m.id)}
-                    title={seguidos.has(m.id) ? "Quitar de mi equipo" : "Agregar a mi equipo"}
-                    className={`mt-0.5 shrink-0 text-lg ${seguidos.has(m.id) ? "text-warning" : "text-black/20"}`}
-                  >
-                    {seguidos.has(m.id) ? "★" : "☆"}
-                  </button>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold">{m.name}</p>
-                    <p className="text-xs font-semibold text-primary">{etiquetaColaborador(m.tipoColaborador)}</p>
-                    {(m.lugarAccionMunicipio || m.lugarAccionDepartamento) && (
-                      <p className="text-xs text-muted">
-                        📍 {[m.lugarAccionMunicipio, m.lugarAccionDepartamento].filter(Boolean).join(", ")}
-                      </p>
-                    )}
-                    {m.telefono && <p className="mt-1 text-xs">📞 {m.telefono}</p>}
-                  </div>
-                </div>
+            <Tarjeta key={m.id} className="relative p-3">
+              {esCoordinador && m.id !== usuarioActualId && (
+                <button
+                  type="button"
+                  onClick={() => alternarSeguido(m.id)}
+                  title={seguidos.has(m.id) ? "Quitar de mi equipo" : "Agregar a mi equipo"}
+                  aria-label={seguidos.has(m.id) ? "Quitar de mi equipo" : "Agregar a mi equipo"}
+                  className="absolute right-2 top-2 rounded-full p-1.5 text-2xl leading-none transition active:scale-90"
+                >
+                  <span className={seguidos.has(m.id) ? "" : "opacity-25 grayscale"}>⭐</span>
+                </button>
+              )}
+              <div className="min-w-0 pr-10">
+                <p className="text-sm font-bold">{m.name}</p>
+                <p className="text-xs font-semibold text-primary">{etiquetaColaborador(m.tipoColaborador)}</p>
+                {(m.lugarAccionMunicipio || m.lugarAccionDepartamento) && (
+                  <p className="text-xs text-muted">
+                    📍 {[m.lugarAccionMunicipio, m.lugarAccionDepartamento].filter(Boolean).join(", ")}
+                  </p>
+                )}
+                {m.telefono && <p className="mt-1 text-xs">📞 {m.telefono}</p>}
                 {m.compartirUbicacion && (
-                  <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">
+                  <span className="mt-1 inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">
                     🟢 en vivo
                   </span>
                 )}
