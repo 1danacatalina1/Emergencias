@@ -72,7 +72,7 @@ export async function GET(request: Request) {
       paraInsumos: v.paraInsumos ? "Sí" : "No",
       municipioBase: v.municipioBase ?? "",
       departamentoBase: v.departamentoBase ?? "",
-      conductores: v.conductores.map((c) => `${c.usuario.name}${c.usuario.telefono ? ` (${c.usuario.telefono})` : ""}`).join("; "),
+      conductores: v.conductores.map((c) => `${c.usuario.name}${c.cedula ? ` (C.C. ${c.cedula})` : ""}`).join("; "),
       pasajeros: v.pasajeros.map((p) => `${p.usuario.name}${p.usuario.telefono ? ` (${p.usuario.telefono})` : ""}`).join("; "),
       necesidadesPendientes: v.necesidades
         .filter((n) => n.estado === "PENDIENTE")
@@ -84,6 +84,27 @@ export async function GET(request: Request) {
     })),
   );
   estiloEncabezado(wsVehiculos);
+
+  const wsConductores = workbook.addWorksheet("Conductores");
+  wsConductores.columns = [
+    { header: "Placa", key: "placa", width: 14 },
+    { header: "Tipo de vehículo", key: "tipo", width: 18 },
+    { header: "Conductor", key: "conductor", width: 28 },
+    { header: "Cédula", key: "cedula", width: 18 },
+    { header: "Teléfono", key: "telefono", width: 16 },
+  ];
+  wsConductores.addRows(
+    vehiculos.flatMap((v) =>
+      v.conductores.map((c) => ({
+        placa: v.placa,
+        tipo: etiqueta(TIPOS_VEHICULO, v.tipo),
+        conductor: c.usuario.name,
+        cedula: c.cedula ?? "Sin registrar",
+        telefono: c.usuario.telefono ?? "",
+      })),
+    ),
+  );
+  estiloEncabezado(wsConductores);
 
   const wsNecesidades = workbook.addWorksheet("Necesidades económicas");
   wsNecesidades.columns = [

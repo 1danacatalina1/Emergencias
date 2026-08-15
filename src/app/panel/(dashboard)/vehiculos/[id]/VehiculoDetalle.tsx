@@ -45,7 +45,7 @@ interface Vehiculo {
   estado: string;
   observaciones: string | null;
   registradoPor: { id: string; name: string } | null;
-  conductores: { usuario: Usuario }[];
+  conductores: { usuario: Usuario; cedula: string | null }[];
   pasajeros: { usuario: Usuario }[];
   necesidades: Necesidad[];
 }
@@ -84,7 +84,10 @@ export default function VehiculoDetalle({
 
   const [editandoEquipo, setEditandoEquipo] = useState(false);
   const [guardandoEquipo, setGuardandoEquipo] = useState(false);
-  const [conductoresSel, setConductoresSel] = useState(new Set(vehiculo.conductores.map((c) => c.usuario.id)));
+  const [errorEquipo, setErrorEquipo] = useState<string | null>(null);
+  const [conductoresCedulas, setConductoresCedulas] = useState<Record<string, string>>(
+    Object.fromEntries(vehiculo.conductores.map((c) => [c.usuario.id, c.cedula ?? ""])),
+  );
   const [pasajerosSel, setPasajerosSel] = useState(new Set(vehiculo.pasajeros.map((p) => p.usuario.id)));
   const [busquedaEquipo, setBusquedaEquipo] = useState("");
 
@@ -151,13 +154,29 @@ export default function VehiculoDetalle({
     setFn(copia);
   }
 
+  function alternarConductor(id: string) {
+    setConductoresCedulas((prev) => {
+      const copia = { ...prev };
+      if (id in copia) delete copia[id]; else copia[id] = "";
+      return copia;
+    });
+  }
+
   async function guardarEquipo() {
+    setErrorEquipo(null);
+    const conductoresIds = Object.keys(conductoresCedulas);
+    const sinCedula = conductoresIds.some((id) => !conductoresCedulas[id]?.trim());
+    if (sinCedula) {
+      setErrorEquipo("Falta la cédula de alguno de los conductores. Es necesaria para tramitar los permisos de ingreso.");
+      return;
+    }
+
     setGuardandoEquipo(true);
     const res = await fetch(`/api/vehiculos/${vehiculo.id}/equipo`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        conductoresIds: Array.from(conductoresSel),
+        conductores: conductoresIds.map((usuarioId) => ({ usuarioId, cedula: conductoresCedulas[usuarioId].trim() })),
         pasajerosIds: Array.from(pasajerosSel),
       }),
     });
@@ -165,6 +184,9 @@ export default function VehiculoDetalle({
       const data = await res.json();
       setVehiculo((prev) => ({ ...prev, conductores: data.conductores, pasajeros: data.pasajeros }));
       setEditandoEquipo(false);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setErrorEquipo(data.error ?? "No se pudo guardar. Intenta de nuevo.");
     }
     setGuardandoEquipo(false);
   }
@@ -353,7 +375,11 @@ export default function VehiculoDetalle({
             <div className="mt-2 flex flex-col gap-1">
               {vehiculo.conductores.length === 0 && <p className="text-xs text-muted">Nadie asignado todavía.</p>}
               {vehiculo.conductores.map((c) => (
-                <p key={c.usuario.id} className="text-sm">{c.usuario.name} {c.usuario.telefono && <span className="text-xs text-muted">· {c.usuario.telefono}</span>}</p>
+                <p key={c.usuario.id} className="text-sm">
+                  {c.usuario.name}
+                  {c.usuario.telefono && <span className="text-xs text-muted"> · {c.usuario.telefono}</span>}
+                  <span className={`text-xs ${c.cedula ? "text-muted" : "font-semibold text-emergency"}`}> · Cédula {c.cedula || "sin registrar"}</span>
+                </p>
               ))}
             </div>
           </Tarjeta>
@@ -369,6 +395,11 @@ export default function VehiculoDetalle({
         </div>
       ) : (
         <Tarjeta className="mt-3 p-4">
+          <p className="mb-2 text-xs text-muted">
+            La cédula del conductor es necesaria para tramitar las cartas de permiso de ingreso a
+            zonas afectadas.
+          </p>
+          {errorEquipo && <div className="mb-3 rounded-xl bg-red-50 p-3 text-sm font-medium text-emergency">{errorEquipo}</div>}
           <Campo
             placeholder="Buscar por nombre…"
             value={busquedaEquipo}
@@ -380,6 +411,7 @@ export default function VehiculoDetalle({
                 <tr className="text-left text-xs font-bold uppercase tracking-wide text-muted">
                   <th className="pb-2">Nombre</th>
                   <th className="pb-2 text-center">Conductor</th>
+                  <th className="pb-2">Cédula</th>
                   <th className="pb-2 text-center">Grupo</th>
                 </tr>
               </thead>
@@ -393,9 +425,19 @@ export default function VehiculoDetalle({
                     <td className="py-2 text-center">
                       <input
                         type="checkbox"
-                        checked={conductoresSel.has(u.id)}
-                        onChange={() => alternarUsuario(conductoresSel, setConductoresSel, u.id)}
+                        checked={u.id in conductoresCedulas}
+                        onChange={() => alternarConductor(u.id)}
                       />
+                    </td>
+                    <td className="py-2 pr-2">
+                      {u.id in conductoresCedulas && (
+                        <Campo
+                          placeholder="N.º de cédula"
+                          value={conductoresCedulas[u.id]}
+                          onChange={(e) => setConductoresCedulas((prev) => ({ ...prev, [u.id]: e.target.value }))}
+                          className="py-1.5 text-xs"
+                        />
+                      )}
                     </td>
                     <td className="py-2 text-center">
                       <input
@@ -407,7 +449,7 @@ export default function VehiculoDetalle({
                   </tr>
                 ))}
                 {rosterFiltrado.length === 0 && (
-                  <tr><td colSpan={3} className="py-3 text-center text-xs text-muted">No hay coincidencias.</td></tr>
+                  <tr><td colSpan={4} className="py-3 text-center text-xs text-muted">No hay coincidencias.</td></tr>
                 )}
               </tbody>
             </table>
@@ -421,8 +463,9 @@ export default function VehiculoDetalle({
               variante="secundario"
               className="w-auto px-4"
               onClick={() => {
-                setConductoresSel(new Set(vehiculo.conductores.map((c) => c.usuario.id)));
+                setConductoresCedulas(Object.fromEntries(vehiculo.conductores.map((c) => [c.usuario.id, c.cedula ?? ""])));
                 setPasajerosSel(new Set(vehiculo.pasajeros.map((p) => p.usuario.id)));
+                setErrorEquipo(null);
                 setEditandoEquipo(false);
               }}
             >

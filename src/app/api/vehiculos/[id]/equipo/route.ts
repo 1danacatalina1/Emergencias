@@ -16,6 +16,7 @@ const INCLUYE = {
   necesidades: { orderBy: { createdAt: "desc" as const } },
 } as const;
 
+
 /** Reemplaza por completo la lista de conductores autorizados y el grupo de pasajeros del vehículo. */
 export async function PATCH(request: Request, { params }: Params) {
   const session = await auth();
@@ -39,7 +40,8 @@ export async function PATCH(request: Request, { params }: Params) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos", detalles: parsed.error.flatten() }, { status: 400 });
   }
-  const { conductoresIds, pasajerosIds } = parsed.data;
+  const { conductores, pasajerosIds } = parsed.data;
+  const conductoresIds = conductores.map((c) => c.usuarioId);
 
   const usuariosValidos = await prisma.user.count({
     where: { id: { in: [...new Set([...conductoresIds, ...pasajerosIds])] } },
@@ -52,7 +54,7 @@ export async function PATCH(request: Request, { params }: Params) {
   await prisma.$transaction([
     prisma.vehiculoConductor.deleteMany({ where: { vehiculoId: id } }),
     prisma.vehiculoConductor.createMany({
-      data: conductoresIds.map((usuarioId) => ({ vehiculoId: id, usuarioId })),
+      data: conductores.map((c) => ({ vehiculoId: id, usuarioId: c.usuarioId, cedula: c.cedula })),
       skipDuplicates: true,
     }),
     prisma.vehiculoPasajero.deleteMany({ where: { vehiculoId: id } }),
@@ -70,7 +72,7 @@ export async function PATCH(request: Request, { params }: Params) {
     accion: "ACTUALIZAR",
     usuarioId: session.user.id,
     usuarioNombre: session.user.name,
-    cambios: { accion: "actualizar_equipo", conductores: conductoresIds.length, pasajeros: pasajerosIds.length },
+    cambios: { accion: "actualizar_equipo", conductores: conductores.length, pasajeros: pasajerosIds.length },
     ip: obtenerIp(request),
   });
 

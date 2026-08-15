@@ -945,6 +945,8 @@ model VehiculoConductor {
   vehiculo   Vehiculo @relation(fields: [vehiculoId], references: [id], onDelete: Cascade)
   usuarioId  String
   usuario    User     @relation("VehiculoConductorUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  // Cédula del conductor, necesaria para tramitar cartas de permiso de ingreso a zonas afectadas.
+  cedula     String?
   createdAt  DateTime @default(now())
 
   @@unique([vehiculoId, usuarioId])
