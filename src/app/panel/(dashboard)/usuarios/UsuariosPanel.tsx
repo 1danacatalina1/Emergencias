@@ -542,9 +542,11 @@ export default function UsuariosPanel({
                     onClick={() => alternarSeguido(u.id)}
                     title={seguidos.has(u.id) ? "Quitar de mi equipo" : "Agregar a mi equipo"}
                     aria-label={seguidos.has(u.id) ? "Quitar de mi equipo" : "Agregar a mi equipo"}
-                    className="absolute right-2 top-2 rounded-full p-1.5 text-2xl leading-none transition active:scale-90"
+                    className={`absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full text-xl leading-none transition active:scale-90 ${
+                      seguidos.has(u.id) ? "" : "border-2 border-black/70 bg-white"
+                    }`}
                   >
-                    <span className={seguidos.has(u.id) ? "" : "opacity-25 grayscale"}>⭐</span>
+                    <span className={seguidos.has(u.id) ? "text-2xl" : "text-lg opacity-60 grayscale"}>⭐</span>
                   </button>
                 )}
                 <div className="flex flex-wrap items-center justify-between gap-3 pr-10">

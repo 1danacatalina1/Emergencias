@@ -252,9 +252,11 @@ export default function EquipoMapaPanel({
                   onClick={() => alternarSeguido(m.id)}
                   title={seguidos.has(m.id) ? "Quitar de mi equipo" : "Agregar a mi equipo"}
                   aria-label={seguidos.has(m.id) ? "Quitar de mi equipo" : "Agregar a mi equipo"}
-                  className="absolute right-2 top-2 rounded-full p-1.5 text-2xl leading-none transition active:scale-90"
+                  className={`absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full text-xl leading-none transition active:scale-90 ${
+                    seguidos.has(m.id) ? "" : "border-2 border-black/70 bg-white"
+                  }`}
                 >
-                  <span className={seguidos.has(m.id) ? "" : "opacity-25 grayscale"}>⭐</span>
+                  <span className={seguidos.has(m.id) ? "text-2xl" : "text-lg opacity-60 grayscale"}>⭐</span>
                 </button>
               )}
               <div className="min-w-0 pr-10">
