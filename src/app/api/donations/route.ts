@@ -4,6 +4,9 @@ import { auth } from "@/lib/auth";
 import { donationCreateSchema } from "@/lib/validations";
 import { generarCodigo } from "@/lib/codigo";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
+import { puedeEscribir } from "@/lib/permisos";
+import { ajustarInventario } from "@/lib/inventario";
+import type { Prisma } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -47,26 +50,41 @@ export async function POST(request: Request) {
     }
   }
 
+  // El estado inicial solo lo puede fijar el equipo interno (ej. al registrar en el panel una
+  // donación que ya se recogió en sitio); una donación pública siempre entra como "OFRECIDA".
+  const puedeFijarEstado = puedeEscribir(session?.user?.role);
+  const estadoInicial = puedeFijarEstado ? data.estado : undefined;
+
   const codigo = await generarCodigo("DON");
 
-  const donacion = await prisma.donation.create({
-    data: {
-      codigo,
-      donationPointId: data.donationPointId ?? null,
-      nombreDonante: data.nombreDonante,
-      telefonoDonante: data.telefonoDonante,
-      tipoAyuda: data.tipoAyuda,
-      descripcion: data.descripcion,
-      insumo: data.insumo ?? null,
-      cantidad: data.cantidad ?? null,
-      unidad: data.unidad ?? null,
-      direccion: data.direccion ?? null,
-      municipio: data.municipio,
-      departamento: data.departamento,
-      latitud: data.latitud ?? null,
-      longitud: data.longitud ?? null,
-      creadoPorId: session?.user?.id ?? null,
-    },
+  const donacion = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const creada = await tx.donation.create({
+      data: {
+        codigo,
+        donationPointId: data.donationPointId ?? null,
+        nombreDonante: data.nombreDonante,
+        telefonoDonante: data.telefonoDonante,
+        tipoAyuda: data.tipoAyuda,
+        descripcion: data.descripcion,
+        insumo: data.insumo ?? null,
+        cantidad: data.cantidad ?? null,
+        unidad: data.unidad ?? null,
+        direccion: data.direccion ?? null,
+        municipio: data.municipio,
+        departamento: data.departamento,
+        latitud: data.latitud ?? null,
+        longitud: data.longitud ?? null,
+        ...(estadoInicial ? { estado: estadoInicial } : {}),
+        creadoPorId: session?.user?.id ?? null,
+      },
+      include: { donationPoint: { select: { id: true, codigo: true, nombre: true } } },
+    });
+
+    if (estadoInicial === "RECIBIDA" && creada.donationPointId && creada.insumo && creada.cantidad) {
+      await ajustarInventario(tx, creada.donationPointId, creada.insumo, creada.cantidad, creada.unidad);
+    }
+
+    return creada;
   });
 
   await registrarAuditoria({

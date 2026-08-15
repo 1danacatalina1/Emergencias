@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { puedeEliminar } from "@/lib/permisos";
+import { puedeEliminar, puedeEscribir } from "@/lib/permisos";
 import DonacionesLista from "./DonacionesLista";
 import PuntosAcopioLista from "./PuntosAcopioLista";
 import InventarioPanel from "./InventarioPanel";
@@ -41,7 +41,7 @@ export default async function DonacionesPage() {
     }),
   ]);
 
-  const puntosOpciones = puntos.map((p) => ({ id: p.id, nombre: p.nombre, municipio: p.municipio }));
+  const puntosOpciones = puntos.map((p) => ({ id: p.id, nombre: p.nombre, municipio: p.municipio, departamento: p.departamento }));
 
   return (
     <div>
@@ -58,7 +58,12 @@ export default async function DonacionesPage() {
 
       <div className="mt-8">
         <h2 className="font-bold">Donaciones recibidas ({donaciones.length})</h2>
-        <DonacionesLista donaciones={JSON.parse(JSON.stringify(donaciones))} puedeEliminar={puedeEliminar(session?.user?.role)} />
+        <DonacionesLista
+          donaciones={JSON.parse(JSON.stringify(donaciones))}
+          puntos={puntosOpciones}
+          puedeEscribir={puedeEscribir(session?.user?.role)}
+          puedeEliminar={puedeEliminar(session?.user?.role)}
+        />
       </div>
 
       <div className="mt-8">

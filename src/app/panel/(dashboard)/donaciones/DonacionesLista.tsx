@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Tarjeta, Seleccion, Campo } from "@/components/ui/campos";
+import { Boton, Tarjeta, Seleccion, Campo, AreaTexto, Etiqueta, ErrorCampo } from "@/components/ui/campos";
 import { InsigniaEstado } from "@/components/ui/insignias";
 import BotonEliminar from "@/components/ui/BotonEliminar";
-import { INSUMOS_SUGERIDOS, UNIDADES_SUGERIDAS } from "@/lib/catalogos";
+import { INSUMOS_SUGERIDOS, UNIDADES_SUGERIDAS, TIPOS_AYUDA } from "@/lib/catalogos";
 
 const ESTADOS = ["OFRECIDA", "CONFIRMADA", "RECIBIDA", "CANCELADA"];
 
@@ -23,8 +23,99 @@ interface Donacion {
   donationPoint: { id: string; codigo: string; nombre: string } | null;
 }
 
-export default function DonacionesLista({ donaciones, puedeEliminar }: { donaciones: Donacion[]; puedeEliminar: boolean }) {
+interface PuntoOpcion {
+  id: string;
+  nombre: string;
+  municipio: string;
+  departamento: string;
+}
+
+const FORM_VACIO = {
+  donationPointId: "",
+  nombreDonante: "",
+  telefonoDonante: "",
+  tipoAyuda: "OTRO",
+  descripcion: "",
+  insumo: "",
+  cantidad: "",
+  unidad: "",
+  municipio: "",
+  departamento: "",
+};
+
+export default function DonacionesLista({
+  donaciones,
+  puntos,
+  puedeEscribir,
+  puedeEliminar,
+}: {
+  donaciones: Donacion[];
+  puntos: PuntoOpcion[];
+  puedeEscribir: boolean;
+  puedeEliminar: boolean;
+}) {
   const [lista, setLista] = useState(donaciones);
+
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [form, setForm] = useState(FORM_VACIO);
+  const [registrando, setRegistrando] = useState(false);
+  const [errores, setErrores] = useState<Record<string, string>>({});
+  const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
+
+  function elegirPunto(donationPointId: string) {
+    const punto = puntos.find((p) => p.id === donationPointId);
+    setForm((f) => ({
+      ...f,
+      donationPointId,
+      municipio: punto?.municipio ?? f.municipio,
+      departamento: punto?.departamento ?? f.departamento,
+    }));
+  }
+
+  async function registrarDonacion(e: React.FormEvent) {
+    e.preventDefault();
+    setErrores({});
+    setErrorGeneral(null);
+    setRegistrando(true);
+    try {
+      const res = await fetch("/api/donations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          donationPointId: form.donationPointId || undefined,
+          nombreDonante: form.nombreDonante,
+          telefonoDonante: form.telefonoDonante,
+          tipoAyuda: form.tipoAyuda,
+          descripcion: form.descripcion,
+          insumo: form.insumo || undefined,
+          cantidad: form.cantidad || undefined,
+          unidad: form.unidad || undefined,
+          municipio: form.municipio,
+          departamento: form.departamento,
+          estado: "RECIBIDA",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (data.detalles?.fieldErrors) {
+          const mapa: Record<string, string> = {};
+          for (const [campo, msgs] of Object.entries(data.detalles.fieldErrors)) {
+            if (Array.isArray(msgs) && msgs.length) mapa[campo] = msgs[0] as string;
+          }
+          setErrores(mapa);
+        }
+        setErrorGeneral(data.error ?? "No se pudo registrar la donación. Intenta de nuevo.");
+        return;
+      }
+      setLista((prev) => [data, ...prev]);
+      setForm(FORM_VACIO);
+      setMostrarFormulario(false);
+    } catch {
+      setErrorGeneral("Ocurrió un error de conexión. Intenta de nuevo.");
+    } finally {
+      setRegistrando(false);
+    }
+  }
 
   async function actualizar(id: string, cambios: Partial<Donacion>) {
     setLista((prev) => prev.map((d) => (d.id === id ? { ...d, ...cambios } : d)));
@@ -43,6 +134,152 @@ export default function DonacionesLista({ donaciones, puedeEliminar }: { donacio
       <datalist id="unidades-donacion-lista">
         {UNIDADES_SUGERIDAS.map((u) => <option key={u} value={u} />)}
       </datalist>
+
+      {puedeEscribir && (
+        puntos.length === 0 ? (
+          <Tarjeta className="p-4 text-sm text-muted">
+            Registra primero un punto de acopio para poder registrar aquí una donación ya recibida.
+          </Tarjeta>
+        ) : !mostrarFormulario ? (
+          <Boton type="button" className="w-auto px-4" onClick={() => setMostrarFormulario(true)}>
+            + Registrar donación recibida
+          </Boton>
+        ) : (
+          <Tarjeta className="p-4">
+            <p className="text-sm font-bold">Registrar donación ya recibida</p>
+            <p className="mt-1 text-xs text-muted">
+              Úsalo cuando el equipo recoge o recibe ayudas directamente (ej. una jornada de
+              recolección). Queda registrada como recibida y suma de inmediato al inventario del
+              punto de acopio.
+            </p>
+            <form onSubmit={registrarDonacion} className="mt-4 flex flex-col gap-3">
+              {errorGeneral && <div className="rounded-xl bg-red-50 p-3 text-sm font-medium text-emergency">{errorGeneral}</div>}
+
+              <div>
+                <Etiqueta htmlFor="reg-punto">Punto de acopio *</Etiqueta>
+                <Seleccion id="reg-punto" value={form.donationPointId} onChange={(e) => elegirPunto(e.target.value)} required>
+                  <option value="">Selecciona un punto de acopio…</option>
+                  {puntos.map((p) => (
+                    <option key={p.id} value={p.id}>{p.nombre} — {p.municipio}</option>
+                  ))}
+                </Seleccion>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <Etiqueta htmlFor="reg-nombre">¿Quién entrega la donación? *</Etiqueta>
+                  <Campo
+                    id="reg-nombre"
+                    value={form.nombreDonante}
+                    onChange={(e) => setForm((f) => ({ ...f, nombreDonante: e.target.value }))}
+                    placeholder="Ej. Jornada de recolección en Calarcá"
+                    required
+                  />
+                  <ErrorCampo mensaje={errores.nombreDonante} />
+                </div>
+                <div>
+                  <Etiqueta htmlFor="reg-telefono">Teléfono de contacto *</Etiqueta>
+                  <Campo
+                    id="reg-telefono"
+                    type="tel"
+                    value={form.telefonoDonante}
+                    onChange={(e) => setForm((f) => ({ ...f, telefonoDonante: e.target.value }))}
+                    required
+                  />
+                  <ErrorCampo mensaje={errores.telefonoDonante} />
+                </div>
+              </div>
+
+              <div>
+                <Etiqueta htmlFor="reg-tipo">Tipo de ayuda *</Etiqueta>
+                <Seleccion id="reg-tipo" value={form.tipoAyuda} onChange={(e) => setForm((f) => ({ ...f, tipoAyuda: e.target.value }))}>
+                  {TIPOS_AYUDA.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </Seleccion>
+              </div>
+
+              <div>
+                <Etiqueta htmlFor="reg-descripcion">Descripción *</Etiqueta>
+                <AreaTexto
+                  id="reg-descripcion"
+                  value={form.descripcion}
+                  onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))}
+                  placeholder="Ej. Mercados y ropa de abrigo recogidos en la jornada"
+                  required
+                />
+                <ErrorCampo mensaje={errores.descripcion} />
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                  <Etiqueta htmlFor="reg-insumo">Insumo específico</Etiqueta>
+                  <input
+                    id="reg-insumo"
+                    list="insumos-donacion-lista"
+                    value={form.insumo}
+                    onChange={(e) => setForm((f) => ({ ...f, insumo: e.target.value }))}
+                    placeholder="Ej. Arroz"
+                    className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div>
+                  <Etiqueta htmlFor="reg-cantidad">Cantidad</Etiqueta>
+                  <Campo
+                    id="reg-cantidad"
+                    type="number"
+                    min={1}
+                    value={form.cantidad}
+                    onChange={(e) => setForm((f) => ({ ...f, cantidad: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Etiqueta htmlFor="reg-unidad">Unidad</Etiqueta>
+                  <input
+                    id="reg-unidad"
+                    list="unidades-donacion-lista"
+                    value={form.unidad}
+                    onChange={(e) => setForm((f) => ({ ...f, unidad: e.target.value }))}
+                    placeholder="kg, cajas…"
+                    className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted">
+                El insumo y la cantidad son opcionales, pero si los indicas, el inventario del punto
+                de acopio queda actualizado de inmediato.
+              </p>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <Etiqueta htmlFor="reg-municipio">Municipio *</Etiqueta>
+                  <Campo id="reg-municipio" value={form.municipio} onChange={(e) => setForm((f) => ({ ...f, municipio: e.target.value }))} required />
+                  <ErrorCampo mensaje={errores.municipio} />
+                </div>
+                <div>
+                  <Etiqueta htmlFor="reg-departamento">Departamento *</Etiqueta>
+                  <Campo id="reg-departamento" value={form.departamento} onChange={(e) => setForm((f) => ({ ...f, departamento: e.target.value }))} required />
+                  <ErrorCampo mensaje={errores.departamento} />
+                </div>
+              </div>
+
+              <div className="mt-1 flex gap-2">
+                <Boton type="submit" className="w-auto px-5" disabled={registrando}>
+                  {registrando ? "Guardando…" : "Registrar donación"}
+                </Boton>
+                <Boton
+                  type="button"
+                  variante="fantasma"
+                  className="w-auto px-5"
+                  onClick={() => { setMostrarFormulario(false); setForm(FORM_VACIO); setErrores({}); setErrorGeneral(null); }}
+                >
+                  Cancelar
+                </Boton>
+              </div>
+            </form>
+          </Tarjeta>
+        )
+      )}
 
       {lista.map((d) => (
         <Tarjeta key={d.id} className="flex flex-wrap items-center justify-between gap-3 p-3.5">

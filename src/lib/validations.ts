@@ -424,6 +424,7 @@ export const donationCreateSchema = z.object({
   departamento: z.string().min(2, "El departamento es obligatorio").max(NOMBRE_MAX),
   latitud: z.coerce.number().min(-90).max(90).optional().nullable(),
   longitud: z.coerce.number().min(-180).max(180).optional().nullable(),
+  estado: estadoDonacionEnum.optional(),
 });
 
 export const donationUpdateSchema = z.object({
