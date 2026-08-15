@@ -33,6 +33,11 @@ interface Usuario {
   lugarAccionDireccion: string | null;
   lugarAccionMunicipio: string | null;
   lugarAccionDepartamento: string | null;
+  disponibilidadTiempo: string | null;
+  disponibilidadDesplazamiento: boolean | null;
+  zonasDesplazamiento: string | null;
+  experticia: string | null;
+  comoPuedeAyudar: string | null;
 }
 
 function CredencialTemporal({ etiqueta, valor, onCerrar }: { etiqueta: string; valor: string; onCerrar: () => void }) {
@@ -86,6 +91,16 @@ function SolicitudPendiente({
           <p className="mt-1 text-xs text-muted">
             Contacto de emergencia: {usuario.contactoEmergenciaNombre} · {usuario.contactoEmergenciaTelefono}
           </p>
+          {usuario.disponibilidadTiempo && (
+            <p className="mt-1 text-xs text-muted">⏱️ Disponibilidad: {usuario.disponibilidadTiempo}</p>
+          )}
+          {usuario.disponibilidadDesplazamiento && (
+            <p className="mt-1 text-xs text-muted">
+              🚗 Puede desplazarse{usuario.zonasDesplazamiento ? ` a: ${usuario.zonasDesplazamiento}` : ""}
+            </p>
+          )}
+          {usuario.experticia && <p className="mt-1 text-xs text-muted">🎓 Experticia: {usuario.experticia}</p>}
+          {usuario.comoPuedeAyudar && <p className="mt-1 text-xs text-muted">🤝 Cómo puede ayudar: {usuario.comoPuedeAyudar}</p>}
           <p className="mt-1 text-xs text-muted">Solicitado {formatearFechaHora(usuario.createdAt)}</p>
         </div>
       </div>
@@ -172,6 +187,8 @@ export default function UsuariosPanel({
         createdAt: new Date().toISOString(), estadoCuenta: "APROBADA", tipoColaborador: null, telefono: null,
         direccionFisica: null, contactoEmergenciaNombre: null, contactoEmergenciaTelefono: null,
         lugarAccionDireccion: null, lugarAccionMunicipio: null, lugarAccionDepartamento: null,
+        disponibilidadTiempo: null, disponibilidadDesplazamiento: null, zonasDesplazamiento: null,
+        experticia: null, comoPuedeAyudar: null,
       },
       ...prev,
     ]);

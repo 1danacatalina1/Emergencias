@@ -14,10 +14,16 @@ export const TIPOS_COLABORADOR = [
   { value: "RESCATISTA", label: "Rescatista" },
   { value: "VOLUNTARIO", label: "Voluntario" },
   { value: "COORDINADOR_VOLUNTARIOS", label: "Coordinador de voluntarios" },
+  { value: "PROFESIONAL_SALUD", label: "Profesional de la salud" },
+  { value: "PROFESIONAL_VETERINARIA", label: "Profesional en veterinaria" },
+  { value: "PROFESIONAL_INGENIERIA_ARQUITECTURA", label: "Profesional en ingeniería / arquitectura" },
   { value: "CENTRO_ACOPIO", label: "Centro de acopio de donaciones" },
   { value: "ENTIDAD", label: "Entidad / organización" },
   { value: "OTRO", label: "Otro" },
 ] as const;
+
+/** Tipos de colaborador que representan una organización, no una persona — no se les pide disponibilidad/experticia individual. */
+export const TIPOS_COLABORADOR_ORGANIZACION = ["CENTRO_ACOPIO", "ENTIDAD"];
 
 /** Sugerencias para el campo de insumo al registrar un envío — no restringen: se puede escribir cualquier otro. */
 export const INSUMOS_SUGERIDOS = [

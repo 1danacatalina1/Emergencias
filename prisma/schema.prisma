@@ -33,6 +33,9 @@ enum TipoColaborador {
   COORDINADOR_VOLUNTARIOS
   CENTRO_ACOPIO
   ENTIDAD
+  PROFESIONAL_SALUD
+  PROFESIONAL_VETERINARIA
+  PROFESIONAL_INGENIERIA_ARQUITECTURA
   OTRO
 }
 
@@ -64,6 +67,14 @@ model User {
   lugarAccionDepartamento String?
   lugarAccionLat          Float?
   lugarAccionLng          Float?
+
+  // Disponibilidad y experticia (principalmente para rescatistas, voluntarios
+  // y profesionales de salud, veterinaria, ingeniería/arquitectura)
+  disponibilidadTiempo         String?
+  disponibilidadDesplazamiento Boolean?
+  zonasDesplazamiento          String?
+  experticia                   String?
+  comoPuedeAyudar              String?
 
   aprobadoPorId String?
   aprobadoPor   User?     @relation("UserAprobadoPor", fields: [aprobadoPorId], references: [id])

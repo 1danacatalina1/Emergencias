@@ -24,6 +24,7 @@ const ENLACE_INTEGRACIONES = { href: "/panel/integraciones", label: "Integracion
 const ENLACE_USUARIOS = { href: "/panel/usuarios", label: "Usuarios", icono: "👥" };
 const ENLACE_MAPA_EQUIPO = { href: "/panel/mapa-equipo", label: "Mapa del equipo", icono: "🛰️" };
 const ENLACE_ALERTAS_SOS = { href: "/panel/sos", label: "Alertas SOS", icono: "🆘" };
+const ENLACE_PROFESIONALES = { href: "/panel/profesionales", label: "Red de profesionales", icono: "🎓" };
 
 const ETIQUETAS_ROL: Record<string, string> = {
   ADMIN: "Administrador",
@@ -35,7 +36,7 @@ const ETIQUETAS_ROL: Record<string, string> = {
 export default function NavPanel({ usuario }: { usuario: { name: string; role: string } }) {
   const pathname = usePathname();
   let ENLACES = puedeAuditarYExportar(usuario.role) ? [...ENLACES_BASE, ENLACE_AUDITORIA] : ENLACES_BASE;
-  if (puedeVerEquipoDeCampo(usuario.role)) ENLACES = [...ENLACES, ENLACE_MAPA_EQUIPO, ENLACE_ALERTAS_SOS];
+  if (puedeVerEquipoDeCampo(usuario.role)) ENLACES = [...ENLACES, ENLACE_MAPA_EQUIPO, ENLACE_ALERTAS_SOS, ENLACE_PROFESIONALES];
   if (puedeGestionarUsuarios(usuario.role)) ENLACES = [...ENLACES, ENLACE_USUARIOS];
   if (puedeGestionarIntegraciones(usuario.role)) ENLACES = [...ENLACES, ENLACE_INTEGRACIONES];
 

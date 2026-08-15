@@ -283,6 +283,9 @@ export const tipoColaboradorEnum = z.enum([
   "COORDINADOR_VOLUNTARIOS",
   "CENTRO_ACOPIO",
   "ENTIDAD",
+  "PROFESIONAL_SALUD",
+  "PROFESIONAL_VETERINARIA",
+  "PROFESIONAL_INGENIERIA_ARQUITECTURA",
   "OTRO",
 ]);
 
@@ -300,6 +303,11 @@ export const userSelfRegisterSchema = z.object({
   lugarAccionDepartamento: z.string().min(2, "El departamento es obligatorio").max(NOMBRE_MAX),
   lugarAccionLat: z.coerce.number().min(-90).max(90),
   lugarAccionLng: z.coerce.number().min(-180).max(180),
+  disponibilidadTiempo: z.string().max(TEXTO_CORTO_MAX).optional().nullable(),
+  disponibilidadDesplazamiento: z.coerce.boolean().optional().nullable(),
+  zonasDesplazamiento: z.string().max(TEXTO_CORTO_MAX).optional().nullable(),
+  experticia: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
+  comoPuedeAyudar: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
 });
 
 export const userAprobarSchema = z.object({

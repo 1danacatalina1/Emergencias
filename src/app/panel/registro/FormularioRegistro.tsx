@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Boton, Campo, Etiqueta, ErrorCampo, Seleccion, Tarjeta } from "@/components/ui/campos";
+import { Boton, Campo, AreaTexto, Etiqueta, ErrorCampo, Seleccion, Tarjeta } from "@/components/ui/campos";
 import { CheckboxPrivacidad } from "@/components/AvisoPrivacidad";
 import SelectorUbicacion from "@/components/mapa/SelectorUbicacionDinamico";
-import { TIPOS_COLABORADOR } from "@/lib/catalogos";
+import { TIPOS_COLABORADOR, TIPOS_COLABORADOR_ORGANIZACION } from "@/lib/catalogos";
 
 export default function FormularioRegistro() {
   const [name, setName] = useState("");
@@ -22,6 +22,14 @@ export default function FormularioRegistro() {
   const [lugarDepartamento, setLugarDepartamento] = useState("");
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+
+  const [disponibilidadTiempo, setDisponibilidadTiempo] = useState("");
+  const [disponibilidadDesplazamiento, setDisponibilidadDesplazamiento] = useState(false);
+  const [zonasDesplazamiento, setZonasDesplazamiento] = useState("");
+  const [experticia, setExperticia] = useState("");
+  const [comoPuedeAyudar, setComoPuedeAyudar] = useState("");
+
+  const esOrganizacion = TIPOS_COLABORADOR_ORGANIZACION.includes(tipoColaborador);
 
   const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -53,6 +61,11 @@ export default function FormularioRegistro() {
           lugarAccionDepartamento: lugarDepartamento,
           lugarAccionLat: lat,
           lugarAccionLng: lng,
+          disponibilidadTiempo: esOrganizacion ? undefined : disponibilidadTiempo || undefined,
+          disponibilidadDesplazamiento: esOrganizacion ? undefined : disponibilidadDesplazamiento,
+          zonasDesplazamiento: esOrganizacion ? undefined : zonasDesplazamiento || undefined,
+          experticia: esOrganizacion ? undefined : experticia || undefined,
+          comoPuedeAyudar: esOrganizacion ? undefined : comoPuedeAyudar || undefined,
         }),
       });
 
@@ -187,6 +200,68 @@ export default function FormularioRegistro() {
             </div>
           </div>
         </div>
+
+        {!esOrganizacion && (
+          <div>
+            <h3 className="mb-3 font-bold">Disponibilidad y experticia</h3>
+            <p className="mb-2 text-xs text-muted">
+              Nos ayuda a saber a quién llamar según lo que se necesite en cada momento.
+            </p>
+            <div className="flex flex-col gap-3">
+              <div>
+                <Etiqueta htmlFor="disponibilidadTiempo">¿Cuánto tiempo puedes aportar? (opcional)</Etiqueta>
+                <Campo
+                  id="disponibilidadTiempo"
+                  value={disponibilidadTiempo}
+                  onChange={(e) => setDisponibilidadTiempo(e.target.value)}
+                  placeholder="Ej. Fines de semana, 10 horas semanales, tiempo completo…"
+                />
+              </div>
+
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input
+                  type="checkbox"
+                  checked={disponibilidadDesplazamiento}
+                  onChange={(e) => setDisponibilidadDesplazamiento(e.target.checked)}
+                  className="h-5 w-5 rounded border-border"
+                />
+                Puedo desplazarme a zonas afectadas
+              </label>
+
+              {disponibilidadDesplazamiento && (
+                <div>
+                  <Etiqueta htmlFor="zonasDesplazamiento">¿A qué zonas podrías desplazarte? (opcional)</Etiqueta>
+                  <Campo
+                    id="zonasDesplazamiento"
+                    value={zonasDesplazamiento}
+                    onChange={(e) => setZonasDesplazamiento(e.target.value)}
+                    placeholder="Ej. Bogotá y municipios cercanos, todo Cundinamarca…"
+                  />
+                </div>
+              )}
+
+              <div>
+                <Etiqueta htmlFor="experticia">¿Cuál es tu experticia o especialidad? (opcional)</Etiqueta>
+                <AreaTexto
+                  id="experticia"
+                  value={experticia}
+                  onChange={(e) => setExperticia(e.target.value)}
+                  placeholder="Ej. Medicina de urgencias, cirugía veterinaria, ingeniería estructural…"
+                />
+              </div>
+
+              <div>
+                <Etiqueta htmlFor="comoPuedeAyudar">¿En qué consideras que puedes ayudar? (opcional)</Etiqueta>
+                <AreaTexto
+                  id="comoPuedeAyudar"
+                  value={comoPuedeAyudar}
+                  onChange={(e) => setComoPuedeAyudar(e.target.value)}
+                  placeholder="Ej. Atención de heridas leves, evaluación estructural de edificaciones dañadas, revisión de mascotas afectadas…"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         <CheckboxPrivacidad checked={aceptaPrivacidad} onChange={setAceptaPrivacidad} />
 

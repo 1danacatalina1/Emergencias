@@ -41,6 +41,11 @@ export async function POST(request: Request) {
       lugarAccionDepartamento: data.lugarAccionDepartamento,
       lugarAccionLat: data.lugarAccionLat,
       lugarAccionLng: data.lugarAccionLng,
+      disponibilidadTiempo: data.disponibilidadTiempo || null,
+      disponibilidadDesplazamiento: data.disponibilidadDesplazamiento ?? null,
+      zonasDesplazamiento: data.zonasDesplazamiento || null,
+      experticia: data.experticia || null,
+      comoPuedeAyudar: data.comoPuedeAyudar || null,
     },
   });
 
