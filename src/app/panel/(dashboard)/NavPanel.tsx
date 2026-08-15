@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { puedeAuditarYExportar, puedeGestionarIntegraciones, puedeGestionarUsuarios, puedeVerEquipoDeCampo } from "@/lib/permisos";
 import BotonSOS from "@/components/sos/BotonSOS";
+import BotonUbicacion from "@/components/ubicacion/BotonUbicacion";
 
 const ENLACES_BASE = [
   { href: "/panel", label: "Inicio", icono: "📊" },
@@ -49,7 +50,8 @@ export default function NavPanel({ usuario }: { usuario: { name: string; role: s
             {usuario.name} · {ETIQUETAS_ROL[usuario.role] ?? usuario.role}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2">
+          <BotonUbicacion />
           <BotonSOS />
           <button onClick={() => signOut({ callbackUrl: "/" })} className="text-sm font-medium text-white/80">
             Salir
@@ -77,7 +79,10 @@ export default function NavPanel({ usuario }: { usuario: { name: string; role: s
         <p className="mt-0.5 truncate text-sm font-semibold text-muted">
           {usuario.name} · {ETIQUETAS_ROL[usuario.role] ?? usuario.role}
         </p>
-        <BotonSOS className="mb-6 mt-3 w-full justify-center" />
+        <div className="mb-6 mt-3 grid grid-cols-2 gap-2">
+          <BotonUbicacion className="w-full" />
+          <BotonSOS className="w-full justify-center" />
+        </div>
         <nav className="flex flex-1 flex-col gap-1">
           {ENLACES.map((enlace) => (
             <Link
