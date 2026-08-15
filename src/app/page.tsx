@@ -108,6 +108,13 @@ export default function Home() {
           📊 Panel de gestión
         </Link>
 
+        <Link
+          href="/instalar"
+          className="mt-3 flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface p-4 text-sm font-semibold text-muted transition hover:bg-black/[.02]"
+        >
+          📲 Instalar la app en tu celular
+        </Link>
+
         <p className="mt-8 text-center text-xs text-muted">
           Si tu vida o la de alguien más está en peligro inmediato, comunícate primero con la línea de emergencias 123.
         </p>
