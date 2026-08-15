@@ -91,29 +91,29 @@ export default async function PanelInicioPage() {
       </div>
 
       <p className="mt-1 px-1 text-[11px] font-bold uppercase tracking-wide text-muted">Reportes de la ciudadanía</p>
-      <div className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-3">
+      <div className="mt-1.5 grid grid-cols-3 gap-2">
         {kpisReportes.map((k) => (
-          <Tarjeta key={k.label} className="p-4">
-            <p className={`text-2xl font-extrabold ${k.color}`}>
+          <Tarjeta key={k.label} className="p-2">
+            <p className={`text-base font-extrabold leading-tight ${k.color}`}>
               {k.valor}
-              {k.de !== undefined && <span className="text-sm font-medium text-muted"> / {k.de}</span>}
+              {k.de !== undefined && <span className="text-[11px] font-medium text-muted"> / {k.de}</span>}
             </p>
-            <p className="mt-1 text-xs font-medium text-muted">{k.label}</p>
+            <p className="mt-0.5 text-[10px] font-medium leading-tight text-muted">{k.label}</p>
           </Tarjeta>
         ))}
       </div>
 
-      <p className="mt-6 px-1 text-[11px] font-bold uppercase tracking-wide text-muted">Equipo de voluntarios</p>
-      <div className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-3">
+      <p className="mt-3 px-1 text-[11px] font-bold uppercase tracking-wide text-muted">Equipo de voluntarios</p>
+      <div className="mt-1.5 grid grid-cols-3 gap-2">
         {kpisEquipo.map((k) => (
-          <Tarjeta key={k.label} className="p-4">
-            <p className={`text-2xl font-extrabold ${k.color}`}>{k.valor}</p>
-            <p className="mt-1 text-xs font-medium text-muted">{k.label}</p>
+          <Tarjeta key={k.label} className="p-2">
+            <p className={`text-base font-extrabold leading-tight ${k.color}`}>{k.valor}</p>
+            <p className="mt-0.5 text-[10px] font-medium leading-tight text-muted">{k.label}</p>
           </Tarjeta>
         ))}
       </div>
 
-      <div className="mt-6 flex items-center justify-between">
+      <div className="mt-4 flex items-center justify-between">
         <h2 className="font-bold">Últimos incidentes reportados</h2>
         <Link href="/panel/incidentes" className="text-sm font-semibold text-primary">Ver todos →</Link>
       </div>
