@@ -174,18 +174,13 @@ export default function VehiculoDetalle({
   async function guardarEquipo() {
     setErrorEquipo(null);
     const conductoresIds = Object.keys(conductoresCedulas);
-    const sinCedula = conductoresIds.some((id) => !conductoresCedulas[id]?.trim());
-    if (sinCedula) {
-      setErrorEquipo("Falta la cédula de alguno de los conductores. Es necesaria para tramitar los permisos de ingreso.");
-      return;
-    }
 
     setGuardandoEquipo(true);
     const res = await fetch(`/api/vehiculos/${vehiculo.id}/equipo`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        conductores: conductoresIds.map((usuarioId) => ({ usuarioId, cedula: conductoresCedulas[usuarioId].trim() })),
+        conductores: conductoresIds.map((usuarioId) => ({ usuarioId, cedula: conductoresCedulas[usuarioId].trim() || null })),
         pasajerosIds: Array.from(pasajerosSel),
       }),
     });
@@ -433,8 +428,8 @@ export default function VehiculoDetalle({
       ) : (
         <Tarjeta className="mt-3 p-4">
           <p className="mb-2 text-xs text-muted">
-            La cédula del conductor es necesaria para tramitar las cartas de permiso de ingreso a
-            zonas afectadas.
+            La cédula del conductor es opcional, pero se recomienda registrarla porque es necesaria
+            para tramitar las cartas de permiso de ingreso a zonas afectadas.
           </p>
           {errorEquipo && <div className="mb-3 rounded-xl bg-red-50 p-3 text-sm font-medium text-emergency">{errorEquipo}</div>}
           <Campo

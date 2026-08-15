@@ -587,7 +587,7 @@ export const vehiculoEquipoSchema = z.object({
     .array(
       z.object({
         usuarioId: z.string(),
-        cedula: z.string().min(5, "Indica el número de cédula del conductor").max(20),
+        cedula: z.string().max(20).optional().nullable(),
       }),
     )
     .max(100),

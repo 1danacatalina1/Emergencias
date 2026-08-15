@@ -99,7 +99,10 @@ export async function limitarSiCorresponde(request: NextRequest): Promise<NextRe
   if (pathname === "/api/upload" && request.method === "POST") {
     return aplicarLimite(limiteSubidas, ip, "Demasiadas subidas de archivos en poco tiempo. Espera un momento.");
   }
-  if (pathname === "/api/aid-requests/extraer-captura" && request.method === "POST") {
+  if (
+    (pathname === "/api/aid-requests/extraer-captura" || pathname === "/api/vehiculos/extraer-captura") &&
+    request.method === "POST"
+  ) {
     return aplicarLimite(limiteExtraccionCaptura, ip, "Demasiadas capturas analizadas en poco tiempo. Espera un momento.");
   }
   if (pathname.startsWith("/api/external/")) {

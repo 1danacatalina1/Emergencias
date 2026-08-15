@@ -54,7 +54,7 @@ export async function PATCH(request: Request, { params }: Params) {
   await prisma.$transaction([
     prisma.vehiculoConductor.deleteMany({ where: { vehiculoId: id } }),
     prisma.vehiculoConductor.createMany({
-      data: conductores.map((c) => ({ vehiculoId: id, usuarioId: c.usuarioId, cedula: c.cedula })),
+      data: conductores.map((c) => ({ vehiculoId: id, usuarioId: c.usuarioId, cedula: c.cedula?.trim() || null })),
       skipDuplicates: true,
     }),
     prisma.vehiculoPasajero.deleteMany({ where: { vehiculoId: id } }),
