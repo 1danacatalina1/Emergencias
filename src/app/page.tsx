@@ -63,7 +63,7 @@ export default function Home() {
   return (
     <div className="flex min-h-full flex-1 flex-col bg-background">
       <header
-        className="relative overflow-hidden px-5 pb-8 pt-10 text-white"
+        className="relative overflow-hidden px-5 pb-8 pt-6 text-white"
         style={{
           background:
             "linear-gradient(to bottom, #FCD116 0%, #FCD116 50%, #003893 50%, #003893 75%, #CE1126 75%, #CE1126 100%)",
@@ -71,7 +71,15 @@ export default function Home() {
       >
         <div className="absolute inset-0 bg-black/40" aria-hidden />
         <div className="relative">
-          <p className="text-sm font-medium uppercase tracking-wide text-white/80">Colombia · Atención de emergencias</p>
+          <div className="flex justify-end">
+            <Link
+              href="/panel"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-primary shadow-md transition active:scale-95"
+            >
+              👤 Ingresar a mi panel
+            </Link>
+          </div>
+          <p className="mt-4 text-sm font-medium uppercase tracking-wide text-white/80">Colombia · Atención de emergencias</p>
           <h1 className="mt-1 text-2xl font-bold leading-tight drop-shadow-sm">Sistema de Gestión de Emergencias</h1>
           <p className="mt-2 text-sm text-white/90">
             Reporta y consulta información durante una emergencia o desastre. Actúa ahora.
@@ -102,15 +110,8 @@ export default function Home() {
         </div>
 
         <Link
-          href="/panel"
-          className="mt-6 flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface p-4 text-sm font-semibold text-muted transition hover:bg-black/[.02]"
-        >
-          📊 Panel de gestión
-        </Link>
-
-        <Link
           href="/instalar"
-          className="mt-3 flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface p-4 text-sm font-semibold text-muted transition hover:bg-black/[.02]"
+          className="mt-6 flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface p-4 text-sm font-semibold text-muted transition hover:bg-black/[.02]"
         >
           📲 Instalar la app en tu celular
         </Link>
