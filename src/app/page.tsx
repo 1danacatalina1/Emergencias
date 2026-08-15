@@ -5,7 +5,7 @@ const ACCIONES = [
     href: "/panel/registro",
     icono: "🧑‍🚒",
     titulo: "Únete como colaborador",
-    descripcion: "Regístrate como rescatista, voluntario, coordinador, centro de acopio o entidad",
+    descripcion: "Regístrate como rescatista, voluntario, coordinador, centro de acopio, entidad, o si tienes un vehículo disponible",
     clase: "bg-slate-800 text-white",
   },
   {
