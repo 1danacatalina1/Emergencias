@@ -27,7 +27,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         <NavPanel usuario={{ name: session.user.name ?? "", role: session.user.role }} />
         <div className="flex flex-1 flex-col">
           {puedeVerEquipoDeCampo(session.user.role) && <BannerSOSActivo />}
-          <main className="flex-1 px-4 pb-16 pt-4 md:px-8 md:pb-8 md:pt-6">{children}</main>
+          <main className="flex-1 px-4 pb-24 pt-4 md:px-8 md:pb-8 md:pt-6">{children}</main>
         </div>
       </div>
     </UbicacionProvider>
