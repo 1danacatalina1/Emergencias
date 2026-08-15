@@ -48,8 +48,9 @@ export default function MiUbicacionPanel() {
                 : "Puede que necesites volver a activarla en este dispositivo para reanudar el envío."}
             </p>
             <p className="mt-1">
-              Solo se actualiza mientras tienes el panel abierto en tu navegador y diste permiso de
-              ubicación.
+              Se actualiza cada 2 minutos para cuidar la batería de tu celular (cada 20 segundos si
+              tienes una alerta SOS activa, para ubicarte con más precisión). Consume aproximadamente
+              1-3% de batería por hora.
             </p>
             {!ultimaActualizacion && (
               <Boton type="button" variante="secundario" className="mt-2 w-auto px-3 py-1.5 text-xs" onClick={activar}>
@@ -77,6 +78,22 @@ export default function MiUbicacionPanel() {
           No estás compartiendo tu ubicación. Actívala arriba cuando salgas a hacer trabajo de campo.
         </Tarjeta>
       )}
+
+      <Tarjeta className="p-4">
+        <p className="text-sm font-bold">Para que siga funcionando con la pantalla apagada</p>
+        <p className="mt-1 text-xs text-muted">
+          Instala esta página como app en tu celular: abre el menú del navegador (⋮) y toca
+          &ldquo;Agregar a pantalla de inicio&rdquo; o &ldquo;Instalar app&rdquo;. Después, evita cerrarla
+          desde el listado de apps recientes mientras estés en labor de campo.
+        </p>
+        <p className="mt-2 text-xs text-muted">
+          Esto funciona mejor en <span className="font-semibold">Android</span>. En{" "}
+          <span className="font-semibold">iPhone</span>, Apple no permite que ninguna app ni página web
+          siga enviando ubicación una vez la pantalla se bloquea — es una restricción del sistema
+          operativo, no de esta plataforma. Mientras tengas la pantalla encendida y la app abierta, sí
+          funciona en cualquier celular.
+        </p>
+      </Tarjeta>
     </div>
   );
 }
