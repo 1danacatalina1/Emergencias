@@ -56,6 +56,7 @@ export async function POST(request: Request) {
       departamento: data.departamento,
       latitud: data.latitud ?? null,
       longitud: data.longitud ?? null,
+      canal: data.canal,
       creadoPorId: session?.user?.id ?? null,
     },
   });

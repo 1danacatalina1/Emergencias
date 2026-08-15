@@ -61,6 +61,13 @@ export const estadoAyudaEnum = z.enum([
   "ENTREGADA",
   "CANCELADA",
 ]);
+export const canalSolicitudEnum = z.enum([
+  "PLATAFORMA",
+  "WHATSAPP",
+  "LLAMADA",
+  "PRESENCIAL",
+  "OTRO",
+]);
 
 // Límites compartidos para texto libre, para evitar payloads desproporcionados
 // (abuso de almacenamiento, exportes a Excel enormes, etc.).
@@ -222,6 +229,7 @@ export const aidRequestCreateSchema = z.object({
   departamento: z.string().min(2, "El departamento es obligatorio").max(NOMBRE_MAX),
   latitud: z.coerce.number().min(-90).max(90).optional().nullable(),
   longitud: z.coerce.number().min(-180).max(180).optional().nullable(),
+  canal: canalSolicitudEnum.optional(),
 });
 
 export const aidRequestUpdateSchema = z.object({

@@ -1,3 +1,11 @@
+export const CANALES_SOLICITUD = [
+  { value: "PLATAFORMA", label: "Formulario web", icono: "🌐" },
+  { value: "WHATSAPP", label: "WhatsApp", icono: "💬" },
+  { value: "LLAMADA", label: "Llamada telefónica", icono: "📞" },
+  { value: "PRESENCIAL", label: "Presencial", icono: "🧑‍🤝‍🧑" },
+  { value: "OTRO", label: "Otro", icono: "✉️" },
+] as const;
+
 export const TIPOS_AYUDA = [
   { value: "ALIMENTOS", label: "Alimentos" },
   { value: "AGUA", label: "Agua potable" },

@@ -215,6 +215,14 @@ enum EstadoAyuda {
   CANCELADA
 }
 
+enum CanalSolicitud {
+  PLATAFORMA
+  WHATSAPP
+  LLAMADA
+  PRESENCIAL
+  OTRO
+}
+
 enum AccionAuditoria {
   CREAR
   ACTUALIZAR
@@ -413,6 +421,7 @@ model AidRequest {
 
   prioridad NivelPrioridad @default(MEDIA)
   estado    EstadoAyuda    @default(SOLICITADA)
+  canal     CanalSolicitud @default(PLATAFORMA)
 
   creadoPorId      String?
   creadoPor        User?   @relation("AidRequestCreatedBy", fields: [creadoPorId], references: [id])

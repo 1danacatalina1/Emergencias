@@ -20,6 +20,13 @@ function haceCuanto(iso: string) {
   return `hace ${Math.round(minutos / 60)} h`;
 }
 
+/** Normaliza un teléfono colombiano para tel:/WhatsApp, asumiendo indicativo 57 si falta. */
+function telefonoConIndicativo(telefono: string) {
+  const digitos = telefono.replace(/\D/g, "");
+  if (digitos.length === 10) return `57${digitos}`;
+  return digitos;
+}
+
 interface Miembro {
   id: string;
   name: string;
@@ -272,6 +279,24 @@ export default function EquipoMapaPanel({
                   <span className="mt-1 inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">
                     🟢 en vivo
                   </span>
+                )}
+                {m.telefono && (
+                  <div className="mt-2 flex gap-2">
+                    <a
+                      href={`tel:+${telefonoConIndicativo(m.telefono)}`}
+                      className="flex-1 rounded-lg bg-primary/10 px-2 py-1.5 text-center text-xs font-semibold text-primary active:scale-95"
+                    >
+                      📞 Llamar
+                    </a>
+                    <a
+                      href={`https://wa.me/${telefonoConIndicativo(m.telefono)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 rounded-lg bg-success/10 px-2 py-1.5 text-center text-xs font-semibold text-success active:scale-95"
+                    >
+                      💬 WhatsApp
+                    </a>
+                  </div>
                 )}
               </div>
             </Tarjeta>

@@ -5,14 +5,20 @@ import Link from "next/link";
 import { Tarjeta, Seleccion } from "@/components/ui/campos";
 import { InsigniaEstado } from "@/components/ui/insignias";
 import BotonEliminar from "@/components/ui/BotonEliminar";
+import { CANALES_SOLICITUD } from "@/lib/catalogos";
 
 const ESTADOS = ["SOLICITADA", "EN_PROCESO", "ENTREGADA", "CANCELADA"];
+
+function etiquetaCanal(canal: string) {
+  return CANALES_SOLICITUD.find((c) => c.value === canal) ?? { label: canal, icono: "✉️" };
+}
 
 interface Ayuda {
   id: string;
   codigo: string;
   tipoAyuda: string;
   estado: string;
+  canal: string;
   nombreSolicitante: string;
   telefonoSolicitante: string;
   descripcion: string;
@@ -38,7 +44,12 @@ export default function AyudasLista({ ayudas, puedeEliminar }: { ayudas: Ayuda[]
       {lista.map((a) => (
         <Tarjeta key={a.id} className="flex flex-wrap items-center justify-between gap-3 p-3.5">
           <div className="min-w-0">
-            <p className="font-mono text-xs font-bold text-primary">{a.codigo}</p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <p className="font-mono text-xs font-bold text-primary">{a.codigo}</p>
+              <span className="rounded-full bg-black/[.04] px-2 py-0.5 text-[11px] font-semibold text-muted">
+                {etiquetaCanal(a.canal).icono} {etiquetaCanal(a.canal).label}
+              </span>
+            </div>
             <p className="text-sm font-bold">{a.tipoAyuda} · {a.nombreSolicitante}</p>
             <p className="text-xs text-muted">{a.descripcion} — {a.municipio} · {a.cantidadPersonas} persona(s) · {a.telefonoSolicitante}</p>
             {a.incident && (
