@@ -10,7 +10,7 @@ export default function CopiarEnlace({ url }: { url: string }) {
     <Boton
       type="button"
       variante="secundario"
-      className="!w-auto shrink-0 px-3 py-1.5 text-xs"
+      className="w-auto shrink-0 px-3 py-1.5 text-xs"
       onClick={() =>
         navigator.clipboard.writeText(url).then(() => {
           setCopiado(true);

@@ -38,7 +38,7 @@ export default function InstalarBoton() {
   return (
     <Boton
       type="button"
-      className="!w-auto px-5"
+      className="w-auto px-5"
       onClick={async () => {
         await evento.prompt();
         await evento.userChoice;

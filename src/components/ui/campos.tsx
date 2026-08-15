@@ -1,13 +1,17 @@
 import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, LabelHTMLAttributes } from "react";
+import { twMerge } from "tailwind-merge";
 
 export function Etiqueta({ className = "", ...props }: LabelHTMLAttributes<HTMLLabelElement>) {
-  return <label className={`mb-1.5 block text-sm font-semibold text-foreground ${className}`} {...props} />;
+  return <label className={twMerge("mb-1.5 block text-sm font-semibold text-foreground", className)} {...props} />;
 }
 
 export function Campo({ className = "", ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`w-full rounded-xl border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${className}`}
+      className={twMerge(
+        "w-full rounded-xl border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
+        className,
+      )}
       {...props}
     />
   );
@@ -16,7 +20,10 @@ export function Campo({ className = "", ...props }: InputHTMLAttributes<HTMLInpu
 export function AreaTexto({ className = "", ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
-      className={`w-full rounded-xl border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${className}`}
+      className={twMerge(
+        "w-full rounded-xl border border-border bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
+        className,
+      )}
       rows={4}
       {...props}
     />
@@ -26,7 +33,10 @@ export function AreaTexto({ className = "", ...props }: TextareaHTMLAttributes<H
 export function Seleccion({ className = "", children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
-      className={`w-full rounded-xl border border-border bg-surface px-4 py-3 text-base text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 ${className}`}
+      className={twMerge(
+        "w-full rounded-xl border border-border bg-surface px-4 py-3 text-base text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20",
+        className,
+      )}
       {...props}
     >
       {children}
@@ -51,9 +61,9 @@ export function Boton({
     secundario: "bg-surface text-foreground border border-border hover:bg-black/[.03]",
     fantasma: "text-primary hover:bg-primary/5",
   };
-  return <button className={`${base} ${variantes[variante]} ${className}`} {...props} />;
+  return <button className={twMerge(base, variantes[variante], className)} {...props} />;
 }
 
 export function Tarjeta({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={`rounded-2xl border border-border bg-surface shadow-sm ${className}`} {...props} />;
+  return <div className={twMerge("rounded-2xl border border-border bg-surface shadow-sm", className)} {...props} />;
 }
