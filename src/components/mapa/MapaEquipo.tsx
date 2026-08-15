@@ -1,7 +1,9 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useEffect, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import type { Marker as LeafletMarker } from "leaflet";
 import { crearIconoMarcador } from "./icono";
 import { TIPOS_COLABORADOR } from "@/lib/catalogos";
 
@@ -33,8 +35,42 @@ function estaDesactualizado(iso: string) {
   return Date.now() - new Date(iso).getTime() > 30 * 60_000;
 }
 
-export default function MapaEquipo({ usuarios }: { usuarios: UbicacionUsuarioMapa[] }) {
+function EnfocarUsuario({
+  usuarios,
+  enfocarId,
+  enfocarToken,
+  marcadores,
+}: {
+  usuarios: UbicacionUsuarioMapa[];
+  enfocarId: string | null | undefined;
+  enfocarToken: number | undefined;
+  marcadores: React.RefObject<Record<string, LeafletMarker>>;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!enfocarId) return;
+    const usuario = usuarios.find((u) => u.id === enfocarId);
+    if (!usuario) return;
+    map.flyTo([usuario.ubicacionLat, usuario.ubicacionLng], 15, { duration: 1 });
+    marcadores.current[enfocarId]?.openPopup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enfocarId, enfocarToken]);
+
+  return null;
+}
+
+export default function MapaEquipo({
+  usuarios,
+  enfocarId,
+  enfocarToken,
+}: {
+  usuarios: UbicacionUsuarioMapa[];
+  enfocarId?: string | null;
+  enfocarToken?: number;
+}) {
   const centro: [number, number] = usuarios.length > 0 ? [usuarios[0]!.ubicacionLat, usuarios[0]!.ubicacionLng] : CENTRO_DEFECTO;
+  const marcadores = useRef<Record<string, LeafletMarker>>({});
 
   return (
     <MapContainer center={centro} zoom={usuarios.length > 0 ? 11 : 6} className="h-full w-full">
@@ -42,10 +78,19 @@ export default function MapaEquipo({ usuarios }: { usuarios: UbicacionUsuarioMap
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      <EnfocarUsuario usuarios={usuarios} enfocarId={enfocarId} enfocarToken={enfocarToken} marcadores={marcadores} />
       {usuarios.map((u) => {
         const desactualizado = estaDesactualizado(u.ubicacionActualizadaEn);
         return (
-          <Marker key={u.id} position={[u.ubicacionLat, u.ubicacionLng]} icon={crearIconoMarcador(desactualizado ? "#9ca3af" : COLOR_EQUIPO)}>
+          <Marker
+            key={u.id}
+            position={[u.ubicacionLat, u.ubicacionLng]}
+            icon={crearIconoMarcador(desactualizado ? "#9ca3af" : COLOR_EQUIPO)}
+            ref={(marcador) => {
+              if (marcador) marcadores.current[u.id] = marcador;
+              else delete marcadores.current[u.id];
+            }}
+          >
             <Popup>
               <div className="min-w-[180px]">
                 <p className="font-bold">{u.name}</p>

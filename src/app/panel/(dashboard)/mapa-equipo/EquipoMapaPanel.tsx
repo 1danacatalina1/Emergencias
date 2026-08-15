@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Boton, Campo, Tarjeta } from "@/components/ui/campos";
 import { puedeGestionarUsuarios } from "@/lib/permisos";
 import MapaEquipo from "@/components/mapa/MapaEquipoDinamico";
@@ -63,6 +63,13 @@ export default function EquipoMapaPanel({
     Object.fromEntries(misSolicitudesIniciales.map((s) => [s.coordinadorId, s.estado])),
   );
   const [enviandoA, setEnviandoA] = useState<string | null>(null);
+  const [enfoque, setEnfoque] = useState<{ id: string; token: number } | null>(null);
+  const mapaRef = useRef<HTMLDivElement>(null);
+
+  function enfocarUsuario(id: string) {
+    setEnfoque((prev) => ({ id, token: (prev?.token ?? 0) + 1 }));
+    mapaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 
   useEffect(() => {
     let activo = true;
@@ -130,11 +137,12 @@ export default function EquipoMapaPanel({
   return (
     <div className="mt-4 flex flex-col gap-6">
       <div className="flex flex-col gap-4 md:flex-row">
-        <div className="h-[50vh] w-full shrink-0 overflow-hidden rounded-2xl border border-border md:h-[70vh] md:flex-1">
-          <MapaEquipo usuarios={usuarios} />
+        <div ref={mapaRef} className="h-[50vh] w-full shrink-0 overflow-hidden rounded-2xl border border-border md:h-[70vh] md:flex-1">
+          <MapaEquipo usuarios={usuarios} enfocarId={enfoque?.id} enfocarToken={enfoque?.token} />
         </div>
         <div className="w-full shrink-0 md:w-72">
           <h2 className="text-sm font-bold">Compartiendo ubicación ahora ({usuarios.length})</h2>
+          <p className="mt-1 text-xs text-muted">Toca un nombre para ubicarlo en el mapa.</p>
           <div className="mt-2 flex max-h-[40vh] flex-col gap-2 overflow-y-auto md:max-h-[calc(100vh-14rem)]">
             {!cargando && usuarios.length === 0 && (
               <Tarjeta className="p-3 text-xs text-muted">
@@ -144,8 +152,15 @@ export default function EquipoMapaPanel({
               </Tarjeta>
             )}
             {usuarios.map((u) => (
-              <Tarjeta key={u.id} className="p-3">
-                <p className="text-sm font-bold">{u.name}</p>
+              <Tarjeta
+                key={u.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => enfocarUsuario(u.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); enfocarUsuario(u.id); } }}
+                className={`cursor-pointer p-3 text-left transition ${enfoque?.id === u.id ? "border-primary bg-primary/5" : "hover:bg-black/[.02]"}`}
+              >
+                <p className="text-sm font-bold">📍 {u.name}</p>
                 <p className="text-xs text-muted">{etiquetaColaborador(u.tipoColaborador)}</p>
                 {u.telefono && <p className="mt-1 text-xs">📞 {u.telefono}</p>}
                 <p className="mt-1 text-xs text-muted">Actualizado {haceCuanto(u.ubicacionActualizadaEn)}</p>
