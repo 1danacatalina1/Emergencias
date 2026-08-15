@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { Boton, Campo, Etiqueta, ErrorCampo, Tarjeta } from "@/components/ui/campos";
 
 function FormularioLogin() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/panel";
 
@@ -39,8 +38,12 @@ function FormularioLogin() {
       return;
     }
 
-    router.push(callbackUrl);
-    router.refresh();
+    // Navegación completa (no router.push) a propósito: justo después de iniciar
+    // sesión, la caché de rutas de Next.js puede servir una versión de /panel
+    // guardada de antes de tener sesión, dejando la pantalla "pensando" para
+    // siempre. Una recarga completa garantiza que la cookie de sesión ya
+    // establecida viaje en la siguiente petición.
+    window.location.href = callbackUrl;
   }
 
   return (
