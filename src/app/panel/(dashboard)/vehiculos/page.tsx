@@ -108,6 +108,11 @@ export default async function VehiculosPage({
                     {v.paraPersonas && v.paraInsumos ? "Personal e insumos" : v.paraPersonas ? "Personal" : v.paraInsumos ? "Insumos" : "Sin uso definido"}
                     {v.municipioBase ? ` · ${v.municipioBase}` : ""}
                   </p>
+                  {(v.cubreRutaNacional || v.cubreRutaUrbana) && (
+                    <p className="truncate text-xs text-muted">
+                      {[v.cubreRutaNacional && "🛣️ Nacional", v.cubreRutaUrbana && "🏙️ Urbana"].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
                   <p className="mt-1 text-xs text-muted">
                     👤 {v.conductores.length} conductor(es) · 🧍 {v.pasajeros.length} en el grupo
                     {necesidadesPendientes > 0 && (

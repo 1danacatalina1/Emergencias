@@ -16,6 +16,9 @@ export default function NuevoVehiculoPage() {
   const [capacidadCargaDescripcion, setCapacidadCargaDescripcion] = useState("");
   const [paraPersonas, setParaPersonas] = useState(true);
   const [paraInsumos, setParaInsumos] = useState(true);
+  const [cubreRutaNacional, setCubreRutaNacional] = useState(false);
+  const [cubreRutaUrbana, setCubreRutaUrbana] = useState(false);
+  const [rutasCubiertas, setRutasCubiertas] = useState("");
   const [municipioBase, setMunicipioBase] = useState("");
   const [departamentoBase, setDepartamentoBase] = useState("");
   const [observaciones, setObservaciones] = useState("");
@@ -47,6 +50,9 @@ export default function NuevoVehiculoPage() {
           capacidadCargaDescripcion: capacidadCargaDescripcion || null,
           paraPersonas,
           paraInsumos,
+          cubreRutaNacional,
+          cubreRutaUrbana,
+          rutasCubiertas: rutasCubiertas || null,
           municipioBase: municipioBase || null,
           departamentoBase: departamentoBase || null,
           observaciones: observaciones || null,
@@ -126,6 +132,29 @@ export default function NuevoVehiculoPage() {
               <Etiqueta htmlFor="capacidadCarga">Capacidad de carga</Etiqueta>
               <Campo id="capacidadCarga" value={capacidadCargaDescripcion} onChange={(e) => setCapacidadCargaDescripcion(e.target.value)} placeholder="Ej. 500 kg" />
             </div>
+          </div>
+        </Tarjeta>
+
+        <Tarjeta className="p-4">
+          <p className="text-sm font-semibold">¿Qué tipo de ruta puede cubrir?</p>
+          <div className="mt-2 flex flex-col gap-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={cubreRutaNacional} onChange={(e) => setCubreRutaNacional(e.target.checked)} />
+              Nacional (de ciudad a ciudad)
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={cubreRutaUrbana} onChange={(e) => setCubreRutaUrbana(e.target.checked)} />
+              Urbana (interna en una ciudad)
+            </label>
+          </div>
+          <div className="mt-4">
+            <Etiqueta htmlFor="rutasCubiertas">Rutas específicas (opcional)</Etiqueta>
+            <Campo
+              id="rutasCubiertas"
+              value={rutasCubiertas}
+              onChange={(e) => setRutasCubiertas(e.target.value)}
+              placeholder="Ej. Bogotá - Cali, o dentro de Bogotá"
+            />
           </div>
         </Tarjeta>
 

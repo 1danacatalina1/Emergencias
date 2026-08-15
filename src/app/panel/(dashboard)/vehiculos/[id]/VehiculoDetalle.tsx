@@ -40,6 +40,9 @@ interface Vehiculo {
   capacidadCargaDescripcion: string | null;
   paraPersonas: boolean;
   paraInsumos: boolean;
+  cubreRutaNacional: boolean;
+  cubreRutaUrbana: boolean;
+  rutasCubiertas: string | null;
   municipioBase: string | null;
   departamentoBase: string | null;
   estado: string;
@@ -77,6 +80,9 @@ export default function VehiculoDetalle({
     capacidadCargaDescripcion: vehiculo.capacidadCargaDescripcion ?? "",
     paraPersonas: vehiculo.paraPersonas,
     paraInsumos: vehiculo.paraInsumos,
+    cubreRutaNacional: vehiculo.cubreRutaNacional,
+    cubreRutaUrbana: vehiculo.cubreRutaUrbana,
+    rutasCubiertas: vehiculo.rutasCubiertas ?? "",
     municipioBase: vehiculo.municipioBase ?? "",
     departamentoBase: vehiculo.departamentoBase ?? "",
     observaciones: vehiculo.observaciones ?? "",
@@ -133,6 +139,9 @@ export default function VehiculoDetalle({
         capacidadCargaDescripcion: form.capacidadCargaDescripcion || null,
         paraPersonas: form.paraPersonas,
         paraInsumos: form.paraInsumos,
+        cubreRutaNacional: form.cubreRutaNacional,
+        cubreRutaUrbana: form.cubreRutaUrbana,
+        rutasCubiertas: form.rutasCubiertas || null,
         municipioBase: form.municipioBase || null,
         departamentoBase: form.departamentoBase || null,
         observaciones: form.observaciones || null,
@@ -272,6 +281,13 @@ export default function VehiculoDetalle({
               </p>
               {vehiculo.capacidadPersonas != null && <p className="mt-1 text-sm"><span className="font-semibold">Capacidad:</span> {vehiculo.capacidadPersonas} personas</p>}
               {vehiculo.capacidadCargaDescripcion && <p className="mt-1 text-sm"><span className="font-semibold">Capacidad de carga:</span> {vehiculo.capacidadCargaDescripcion}</p>}
+              {(vehiculo.cubreRutaNacional || vehiculo.cubreRutaUrbana) && (
+                <p className="mt-1 text-sm">
+                  <span className="font-semibold">Cobertura:</span>{" "}
+                  {[vehiculo.cubreRutaNacional && "Nacional (ciudad a ciudad)", vehiculo.cubreRutaUrbana && "Urbana (interna)"].filter(Boolean).join(" · ")}
+                  {vehiculo.rutasCubiertas && ` — ${vehiculo.rutasCubiertas}`}
+                </p>
+              )}
               {(vehiculo.municipioBase || vehiculo.departamentoBase) && (
                 <p className="mt-1 text-sm">
                   <span className="font-semibold">Base:</span> {[vehiculo.municipioBase, vehiculo.departamentoBase].filter(Boolean).join(", ")}
@@ -327,6 +343,27 @@ export default function VehiculoDetalle({
               <Etiqueta htmlFor="ed-carga">Capacidad de carga</Etiqueta>
               <Campo id="ed-carga" value={form.capacidadCargaDescripcion} onChange={(e) => setForm((f) => ({ ...f, capacidadCargaDescripcion: e.target.value }))} />
             </div>
+          </div>
+
+          <p className="mt-3 text-sm font-semibold">¿Qué tipo de ruta puede cubrir?</p>
+          <div className="mt-2 flex flex-col gap-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={form.cubreRutaNacional} onChange={(e) => setForm((f) => ({ ...f, cubreRutaNacional: e.target.checked }))} />
+              Nacional (de ciudad a ciudad)
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={form.cubreRutaUrbana} onChange={(e) => setForm((f) => ({ ...f, cubreRutaUrbana: e.target.checked }))} />
+              Urbana (interna en una ciudad)
+            </label>
+          </div>
+          <div className="mt-3">
+            <Etiqueta htmlFor="ed-rutas">Rutas específicas (opcional)</Etiqueta>
+            <Campo
+              id="ed-rutas"
+              value={form.rutasCubiertas}
+              onChange={(e) => setForm((f) => ({ ...f, rutasCubiertas: e.target.value }))}
+              placeholder="Ej. Bogotá - Cali, o dentro de Bogotá"
+            />
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-3">

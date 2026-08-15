@@ -917,6 +917,11 @@ model Vehiculo {
   paraPersonas Boolean @default(true)
   paraInsumos  Boolean @default(true)
 
+  // Cobertura de ruta: nacional (de ciudad a ciudad) y/o urbana (interna en una ciudad).
+  cubreRutaNacional Boolean @default(false)
+  cubreRutaUrbana   Boolean @default(false)
+  rutasCubiertas    String?
+
   municipioBase    String?
   departamentoBase String?
 
