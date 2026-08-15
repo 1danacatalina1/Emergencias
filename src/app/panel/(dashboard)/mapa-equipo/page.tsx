@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { puedeVerEquipoDeCampo } from "@/lib/permisos";
 import { Tarjeta } from "@/components/ui/campos";
@@ -21,14 +22,37 @@ export default async function MapaEquipoPage() {
     );
   }
 
+  const [roster, seguidos] = await Promise.all([
+    prisma.user.findMany({
+      where: { active: true, estadoCuenta: "APROBADA" },
+      select: {
+        id: true,
+        name: true,
+        telefono: true,
+        tipoColaborador: true,
+        lugarAccionMunicipio: true,
+        lugarAccionDepartamento: true,
+        compartirUbicacion: true,
+      },
+      orderBy: { name: "asc" },
+    }),
+    prisma.seguimientoEquipo.findMany({
+      where: { coordinadorId: session!.user.id },
+      select: { voluntarioId: true },
+    }),
+  ]);
+
   return (
     <div className="flex h-full flex-col">
       <h1 className="text-xl font-bold">Mapa del equipo</h1>
       <p className="mt-1 text-sm text-muted">
-        Ubicación en tiempo real de quienes activaron voluntariamente compartir su ubicación. Se
-        actualiza automáticamente mientras esta página permanece abierta.
+        Ubicación en tiempo real de quienes activaron voluntariamente compartir su ubicación, y el
+        listado completo de usuarios registrados para conformar equipos de trabajo.
       </p>
-      <EquipoMapaPanel />
+      <EquipoMapaPanel
+        rosterInicial={JSON.parse(JSON.stringify(roster))}
+        seguidosIniciales={seguidos.map((s) => s.voluntarioId)}
+      />
     </div>
   );
 }
