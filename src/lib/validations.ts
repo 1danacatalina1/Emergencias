@@ -61,6 +61,7 @@ export const estadoAyudaEnum = z.enum([
   "ENTREGADA",
   "CANCELADA",
 ]);
+export const tipoVehiculoEnum = z.enum(["CARRO", "CAMIONETA", "BUS_BUSETA", "MOTO", "CAMION", "OTRO"]);
 export const canalSolicitudEnum = z.enum([
   "PLATAFORMA",
   "WHATSAPP",
@@ -297,6 +298,20 @@ export const tipoColaboradorEnum = z.enum([
   "OTRO",
 ]);
 
+export const userSelfRegisterVehiculoSchema = z.object({
+  placa: z.string().min(3, "Indica la placa del vehículo").max(20),
+  tipo: tipoVehiculoEnum.default("CARRO"),
+  marcaModelo: z.string().max(NOMBRE_MAX).optional().nullable(),
+  capacidadPersonas: z.coerce.number().int().min(0).max(200).optional().nullable(),
+  capacidadCargaDescripcion: z.string().max(TEXTO_CORTO_MAX).optional().nullable(),
+  paraPersonas: z.boolean().default(true),
+  paraInsumos: z.boolean().default(true),
+  cubreRutaNacional: z.boolean().default(false),
+  cubreRutaUrbana: z.boolean().default(false),
+  rutasCubiertas: z.string().max(TEXTO_CORTO_MAX).optional().nullable(),
+  cedulaConductor: z.string().min(5, "Indica tu número de cédula").max(20),
+});
+
 export const userSelfRegisterSchema = z.object({
   name: z.string().min(3, "Indica tu nombre completo").max(NOMBRE_MAX),
   email: z.string().email("Correo inválido").max(320),
@@ -316,6 +331,7 @@ export const userSelfRegisterSchema = z.object({
   zonasDesplazamiento: z.string().max(TEXTO_CORTO_MAX).optional().nullable(),
   experticia: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
   comoPuedeAyudar: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
+  vehiculo: userSelfRegisterVehiculoSchema.optional().nullable(),
 });
 
 export const userAprobarSchema = z.object({
@@ -526,7 +542,6 @@ export const petUpdateSchema = z.object({
 });
 
 // Vehículos disponibles para movilizar personal e insumos (panel, equipo)
-export const tipoVehiculoEnum = z.enum(["CARRO", "CAMIONETA", "BUS_BUSETA", "MOTO", "CAMION", "OTRO"]);
 export const estadoVehiculoEnum = z.enum(["DISPONIBLE", "EN_USO", "MANTENIMIENTO", "NO_DISPONIBLE"]);
 export const estadoNecesidadVehiculoEnum = z.enum(["PENDIENTE", "CUBIERTA"]);
 

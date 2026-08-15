@@ -49,11 +49,45 @@ export async function POST(request: Request) {
     },
   });
 
+  let vehiculo = null;
+  if (data.vehiculo) {
+    const v = data.vehiculo;
+    const yaExiste = await prisma.vehiculo.findUnique({ where: { placa: v.placa.toUpperCase() } });
+    if (!yaExiste) {
+      vehiculo = await prisma.vehiculo.create({
+        data: {
+          placa: v.placa.toUpperCase(),
+          tipo: v.tipo,
+          marcaModelo: v.marcaModelo ?? null,
+          capacidadPersonas: v.capacidadPersonas ?? null,
+          capacidadCargaDescripcion: v.capacidadCargaDescripcion ?? null,
+          paraPersonas: v.paraPersonas,
+          paraInsumos: v.paraInsumos,
+          cubreRutaNacional: v.cubreRutaNacional,
+          cubreRutaUrbana: v.cubreRutaUrbana,
+          rutasCubiertas: v.rutasCubiertas ?? null,
+          municipioBase: data.lugarAccionMunicipio,
+          departamentoBase: data.lugarAccionDepartamento,
+          registradoPorId: usuario.id,
+          conductores: {
+            create: { usuarioId: usuario.id, cedula: v.cedulaConductor },
+          },
+        },
+      });
+    }
+  }
+
   await registrarAuditoria({
     entidad: "User",
     entidadId: usuario.id,
     accion: "CREAR",
-    cambios: { nombre: usuario.name, email: usuario.email, tipoColaborador: usuario.tipoColaborador, autoregistro: true },
+    cambios: {
+      nombre: usuario.name,
+      email: usuario.email,
+      tipoColaborador: usuario.tipoColaborador,
+      autoregistro: true,
+      vehiculo: vehiculo ? vehiculo.placa : undefined,
+    },
     ip: obtenerIp(request),
   });
 
