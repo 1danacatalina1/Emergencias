@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { userUpdateSchema } from "@/lib/validations";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
-import { puedeGestionarUsuarios, esAdministrador } from "@/lib/permisos";
+import { esAdministrador } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +14,8 @@ export async function PATCH(request: Request, { params }: Params) {
   if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
-  if (!puedeGestionarUsuarios(session.user.role)) {
-    return NextResponse.json({ error: "Tu rol no tiene permiso para editar usuarios" }, { status: 403 });
+  if (!esAdministrador(session.user.role)) {
+    return NextResponse.json({ error: "Solo el Administrador puede cambiar el rol o activar/desactivar cuentas" }, { status: 403 });
   }
 
   const { id } = await params;
@@ -28,10 +28,6 @@ export async function PATCH(request: Request, { params }: Params) {
   const existente = await prisma.user.findUnique({ where: { id } });
   if (!existente) {
     return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
-  }
-
-  if (!esAdministrador(session.user.role) && (existente.role === "ADMIN" || parsed.data.role === "ADMIN")) {
-    return NextResponse.json({ error: "Solo el Administrador puede gestionar cuentas de Administrador" }, { status: 403 });
   }
 
   if (id === session.user.id && parsed.data.role && parsed.data.role !== "ADMIN") {

@@ -532,7 +532,7 @@ export default function UsuariosPanel({
         <div className="mt-3 flex flex-col gap-2">
           {resto.map((u) => {
             const esUno = u.id === usuarioActualId;
-            const esAdminBloqueado = u.role === "ADMIN" && !esAdmin;
+            const controlesBloqueados = !esAdmin;
             const expandido = expandidos.has(u.id);
             return (
               <Tarjeta key={u.id} className="relative p-3.5">
@@ -566,8 +566,8 @@ export default function UsuariosPanel({
                       </p>
                     </button>
                   </div>
-                  {esAdminBloqueado ? (
-                    <p className="text-xs font-medium text-muted">🔒 Solo el Administrador gestiona esta cuenta</p>
+                  {controlesBloqueados ? (
+                    <p className="text-xs font-medium text-muted">🔒 Solo el Administrador cambia el rol, activa/desactiva y restablece contraseñas</p>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Seleccion

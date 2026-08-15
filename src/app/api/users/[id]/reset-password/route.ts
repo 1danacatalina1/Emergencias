@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { generarContrasenaTemporal } from "@/lib/passwords";
 import { registrarAuditoria, obtenerIp } from "@/lib/audit";
-import { puedeGestionarUsuarios, esAdministrador } from "@/lib/permisos";
+import { esAdministrador } from "@/lib/permisos";
 
 export const dynamic = "force-dynamic";
 
@@ -15,17 +15,14 @@ export async function POST(request: Request, { params }: Params) {
   if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
-  if (!puedeGestionarUsuarios(session.user.role)) {
-    return NextResponse.json({ error: "Tu rol no tiene permiso para restablecer contraseñas" }, { status: 403 });
+  if (!esAdministrador(session.user.role)) {
+    return NextResponse.json({ error: "Solo el Administrador puede restablecer contraseñas" }, { status: 403 });
   }
 
   const { id } = await params;
   const existente = await prisma.user.findUnique({ where: { id } });
   if (!existente) {
     return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
-  }
-  if (existente.role === "ADMIN" && !esAdministrador(session.user.role)) {
-    return NextResponse.json({ error: "Solo el Administrador puede restablecer la contraseña de otro Administrador" }, { status: 403 });
   }
 
   const contrasenaTemporal = generarContrasenaTemporal();
