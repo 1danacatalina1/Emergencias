@@ -25,6 +25,9 @@ export default async function PanelInicioPage() {
     puntosAcopioActivos,
     donacionesOfrecidas,
     mascotasActivas,
+    totalCoordinadores,
+    totalVoluntarios,
+    totalProfesionales,
     ultimosIncidentes,
   ] = await prisma.$transaction([
     prisma.incident.count(),
@@ -40,6 +43,15 @@ export default async function PanelInicioPage() {
     prisma.donationPoint.count({ where: { estado: "ACTIVO" } }),
     prisma.donation.count({ where: { estado: { in: ["OFRECIDA", "CONFIRMADA"] } } }),
     prisma.pet.count({ where: { estado: "ACTIVO" } }),
+    prisma.user.count({ where: { active: true, estadoCuenta: "APROBADA", tipoColaborador: "COORDINADOR_VOLUNTARIOS" } }),
+    prisma.user.count({ where: { active: true, estadoCuenta: "APROBADA", tipoColaborador: "VOLUNTARIO" } }),
+    prisma.user.count({
+      where: {
+        active: true,
+        estadoCuenta: "APROBADA",
+        tipoColaborador: { in: ["PROFESIONAL_SALUD", "PROFESIONAL_VETERINARIA", "PROFESIONAL_INGENIERIA_ARQUITECTURA"] },
+      },
+    }),
     prisma.incident.findMany({
       orderBy: { createdAt: "desc" },
       take: 8,
@@ -47,7 +59,7 @@ export default async function PanelInicioPage() {
     }),
   ]);
 
-  const kpis = [
+  const kpisReportes = [
     { label: "Incidentes activos", valor: incidentesAbiertos, de: totalIncidentes, color: "text-primary" },
     { label: "Críticos sin resolver", valor: incidentesCriticos, color: "text-emergency" },
     { label: "Personas desaparecidas", valor: personasDesaparecidas, de: totalPersonas, color: "text-orange-600" },
@@ -57,6 +69,12 @@ export default async function PanelInicioPage() {
     { label: "Puntos de acopio activos", valor: puntosAcopioActivos, color: "text-success" },
     { label: "Donaciones por gestionar", valor: donacionesOfrecidas, color: "text-success" },
     { label: "Mascotas activas", valor: mascotasActivas, color: "text-teal-700" },
+  ];
+
+  const kpisEquipo = [
+    { label: "Coordinadores", valor: totalCoordinadores, color: "text-indigo-700" },
+    { label: "Voluntarios", valor: totalVoluntarios, color: "text-primary" },
+    { label: "Profesionales", valor: totalProfesionales, color: "text-violet-700" },
   ];
 
   return (
@@ -72,13 +90,24 @@ export default async function PanelInicioPage() {
         )}
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
-        {kpis.map((k) => (
+      <p className="mt-1 px-1 text-[11px] font-bold uppercase tracking-wide text-muted">Reportes de la ciudadanía</p>
+      <div className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-3">
+        {kpisReportes.map((k) => (
           <Tarjeta key={k.label} className="p-4">
             <p className={`text-2xl font-extrabold ${k.color}`}>
               {k.valor}
               {k.de !== undefined && <span className="text-sm font-medium text-muted"> / {k.de}</span>}
             </p>
+            <p className="mt-1 text-xs font-medium text-muted">{k.label}</p>
+          </Tarjeta>
+        ))}
+      </div>
+
+      <p className="mt-6 px-1 text-[11px] font-bold uppercase tracking-wide text-muted">Equipo de voluntarios</p>
+      <div className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-3">
+        {kpisEquipo.map((k) => (
+          <Tarjeta key={k.label} className="p-4">
+            <p className={`text-2xl font-extrabold ${k.color}`}>{k.valor}</p>
             <p className="mt-1 text-xs font-medium text-muted">{k.label}</p>
           </Tarjeta>
         ))}
