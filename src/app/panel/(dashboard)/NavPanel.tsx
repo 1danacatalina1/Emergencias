@@ -51,7 +51,7 @@ export default function NavPanel({ usuario }: { usuario: { name: string; role: s
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <BotonUbicacion />
+          <BotonUbicacion oscuro />
           <BotonSOS />
           <button onClick={() => signOut({ callbackUrl: "/" })} className="text-sm font-medium text-white/80">
             Salir
@@ -79,8 +79,10 @@ export default function NavPanel({ usuario }: { usuario: { name: string; role: s
         <p className="mt-0.5 truncate text-sm font-semibold text-muted">
           {usuario.name} · {ETIQUETAS_ROL[usuario.role] ?? usuario.role}
         </p>
-        <div className="mb-6 mt-3 grid grid-cols-2 gap-2">
-          <BotonUbicacion className="w-full" />
+        <div className="mb-6 mt-3 flex flex-col gap-2">
+          <div className="flex items-center justify-center rounded-xl border border-border px-3 py-2">
+            <BotonUbicacion />
+          </div>
           <BotonSOS className="w-full justify-center" />
         </div>
         <nav className="flex flex-1 flex-col gap-1">

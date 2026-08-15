@@ -16,6 +16,13 @@ function etiquetaColaborador(tipo: string | null) {
   return TIPOS_COLABORADOR.find((t) => t.value === tipo)?.label ?? tipo ?? "—";
 }
 
+const ETIQUETAS_ROL: Record<string, string> = {
+  ADMIN: "Administrador",
+  COORDINADOR: "Coordinador",
+  OPERADOR: "Operador",
+  CONSULTA: "Consulta",
+};
+
 interface Usuario {
   id: string;
   name: string;
@@ -38,6 +45,12 @@ interface Usuario {
   zonasDesplazamiento: string | null;
   experticia: string | null;
   comoPuedeAyudar: string | null;
+  compartirUbicacion: boolean;
+}
+
+interface Coordinador {
+  id: string;
+  name: string;
 }
 
 function CredencialTemporal({ etiqueta, valor, onCerrar }: { etiqueta: string; valor: string; onCerrar: () => void }) {
@@ -59,6 +72,34 @@ function CredencialTemporal({ etiqueta, valor, onCerrar }: { etiqueta: string; v
       <Boton type="button" variante="fantasma" className="mt-2 w-auto px-3 py-1.5 text-xs" onClick={onCerrar}>
         Ya la anoté
       </Boton>
+    </div>
+  );
+}
+
+function FichaCompleta({ usuario }: { usuario: Usuario }) {
+  return (
+    <div className="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 rounded-xl bg-black/[.02] p-3 text-xs sm:grid-cols-2">
+      <p><span className="font-semibold">Rol:</span> {ETIQUETAS_ROL[usuario.role] ?? usuario.role}</p>
+      <p><span className="font-semibold">Tipo de colaborador:</span> {etiquetaColaborador(usuario.tipoColaborador)}</p>
+      <p><span className="font-semibold">Correo:</span> {usuario.email}</p>
+      <p><span className="font-semibold">Teléfono:</span> {usuario.telefono || "—"}</p>
+      <p className="sm:col-span-2"><span className="font-semibold">Dirección física:</span> {usuario.direccionFisica || "—"}</p>
+      <p><span className="font-semibold">Contacto de emergencia:</span> {usuario.contactoEmergenciaNombre || "—"}</p>
+      <p><span className="font-semibold">Teléfono del contacto:</span> {usuario.contactoEmergenciaTelefono || "—"}</p>
+      <p className="sm:col-span-2">
+        <span className="font-semibold">Lugar de acción:</span>{" "}
+        {[usuario.lugarAccionDireccion, usuario.lugarAccionMunicipio, usuario.lugarAccionDepartamento].filter(Boolean).join(", ") || "—"}
+      </p>
+      <p><span className="font-semibold">Disponibilidad de tiempo:</span> {usuario.disponibilidadTiempo || "—"}</p>
+      <p>
+        <span className="font-semibold">¿Puede desplazarse?</span>{" "}
+        {usuario.disponibilidadDesplazamiento == null ? "—" : usuario.disponibilidadDesplazamiento ? "Sí" : "No"}
+        {usuario.disponibilidadDesplazamiento && usuario.zonasDesplazamiento ? ` — ${usuario.zonasDesplazamiento}` : ""}
+      </p>
+      <p className="sm:col-span-2"><span className="font-semibold">Experticia:</span> {usuario.experticia || "—"}</p>
+      <p className="sm:col-span-2"><span className="font-semibold">Cómo puede ayudar:</span> {usuario.comoPuedeAyudar || "—"}</p>
+      <p><span className="font-semibold">Comparte ubicación en vivo:</span> {usuario.compartirUbicacion ? "Sí" : "No"}</p>
+      <p><span className="font-semibold">Registrado:</span> {formatearFechaHora(usuario.createdAt)}</p>
     </div>
   );
 }
@@ -142,11 +183,13 @@ export default function UsuariosPanel({
   usuarioActualId,
   esAdmin,
   seguidosIniciales,
+  coordinadores,
 }: {
   usuariosIniciales: Usuario[];
   usuarioActualId: string;
   esAdmin: boolean;
   seguidosIniciales: string[];
+  coordinadores: Coordinador[];
 }) {
   const [usuarios, setUsuarios] = useState(usuariosIniciales);
   const [name, setName] = useState("");
@@ -158,12 +201,18 @@ export default function UsuariosPanel({
   const [reseteos, setReseteos] = useState<Record<string, string>>({});
   const [seguidos, setSeguidos] = useState(new Set(seguidosIniciales));
   const [soloMiEquipo, setSoloMiEquipo] = useState(false);
+  const [expandidos, setExpandidos] = useState(new Set<string>());
+  const [coordinadorExportar, setCoordinadorExportar] = useState("");
 
   const rolesDisponibles = esAdmin ? ROLES : ROLES.filter((r) => r.value !== "ADMIN");
 
   const pendientes = usuarios.filter((u) => u.estadoCuenta === "PENDIENTE");
   let resto = usuarios.filter((u) => u.estadoCuenta !== "PENDIENTE");
   if (soloMiEquipo) resto = resto.filter((u) => seguidos.has(u.id));
+
+  const urlExportar = coordinadorExportar
+    ? `/api/export/usuarios?coordinadorId=${coordinadorExportar}`
+    : "/api/export/usuarios";
 
   async function crearUsuario(e: React.FormEvent) {
     e.preventDefault();
@@ -188,7 +237,7 @@ export default function UsuariosPanel({
         direccionFisica: null, contactoEmergenciaNombre: null, contactoEmergenciaTelefono: null,
         lugarAccionDireccion: null, lugarAccionMunicipio: null, lugarAccionDepartamento: null,
         disponibilidadTiempo: null, disponibilidadDesplazamiento: null, zonasDesplazamiento: null,
-        experticia: null, comoPuedeAyudar: null,
+        experticia: null, comoPuedeAyudar: null, compartirUbicacion: false,
       },
       ...prev,
     ]);
@@ -280,6 +329,14 @@ export default function UsuariosPanel({
     }
   }
 
+  function alternarExpandido(id: string) {
+    setExpandidos((prev) => {
+      const copia = new Set(prev);
+      if (copia.has(id)) copia.delete(id); else copia.add(id);
+      return copia;
+    });
+  }
+
   return (
     <div className="mt-5 flex flex-col gap-6">
       {pendientes.length > 0 && (
@@ -337,6 +394,27 @@ export default function UsuariosPanel({
         )}
       </Tarjeta>
 
+      <Tarjeta className="p-4">
+        <h2 className="font-bold">Exportar a Excel</h2>
+        <p className="mt-1 text-xs text-muted">
+          Descarga toda la información de registro de los usuarios. Puedes filtrar por el equipo que
+          cada coordinador haya marcado con ⭐.
+        </p>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <Seleccion value={coordinadorExportar} onChange={(e) => setCoordinadorExportar(e.target.value)} className="sm:w-72">
+            <option value="">Todos los usuarios</option>
+            {coordinadores.map((c) => (
+              <option key={c.id} value={c.id}>Equipo de {c.name}{c.id === usuarioActualId ? " (tú)" : ""}</option>
+            ))}
+          </Seleccion>
+          <a href={urlExportar}>
+            <Boton type="button" variante="secundario" className="w-auto px-4">
+              ⬇️ Exportar a Excel
+            </Boton>
+          </a>
+        </div>
+      </Tarjeta>
+
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-bold">Cuentas existentes ({resto.length})</h2>
@@ -352,6 +430,7 @@ export default function UsuariosPanel({
           {resto.map((u) => {
             const esUno = u.id === usuarioActualId;
             const esAdminBloqueado = u.role === "ADMIN" && !esAdmin;
+            const expandido = expandidos.has(u.id);
             return (
               <Tarjeta key={u.id} className="p-3.5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -366,7 +445,7 @@ export default function UsuariosPanel({
                         {seguidos.has(u.id) ? "★" : "☆"}
                       </button>
                     )}
-                    <div className="min-w-0">
+                    <button type="button" onClick={() => alternarExpandido(u.id)} className="min-w-0 text-left">
                       <p className="text-sm font-bold">
                         {u.name} {esUno && <span className="font-normal text-muted">(tú)</span>}
                       </p>
@@ -378,7 +457,10 @@ export default function UsuariosPanel({
                         {u.estadoCuenta === "RECHAZADA" && " · Solicitud rechazada"}
                         {!u.active && u.estadoCuenta !== "RECHAZADA" && " · Cuenta desactivada"}
                       </p>
-                    </div>
+                      <p className="mt-1 text-xs font-semibold text-primary underline">
+                        {expandido ? "▴ Ocultar ficha completa" : "▾ Ver ficha completa"}
+                      </p>
+                    </button>
                   </div>
                   {esAdminBloqueado ? (
                     <p className="text-xs font-medium text-muted">🔒 Solo el Administrador gestiona esta cuenta</p>
@@ -414,6 +496,7 @@ export default function UsuariosPanel({
                     </div>
                   )}
                 </div>
+                {expandido && <FichaCompleta usuario={u} />}
                 {reseteos[u.id] && (
                   <CredencialTemporal
                     etiqueta={`Nueva contraseña temporal para ${u.email}`}

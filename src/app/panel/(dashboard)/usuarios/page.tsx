@@ -22,7 +22,7 @@ export default async function UsuariosPage() {
     );
   }
 
-  const [usuarios, seguidos] = await Promise.all([
+  const [usuarios, seguidos, coordinadores] = await Promise.all([
     prisma.user.findMany({
       select: {
         id: true,
@@ -46,12 +46,18 @@ export default async function UsuariosPage() {
         zonasDesplazamiento: true,
         experticia: true,
         comoPuedeAyudar: true,
+        compartirUbicacion: true,
       },
       orderBy: { createdAt: "desc" },
     }),
     prisma.seguimientoEquipo.findMany({
       where: { coordinadorId: session!.user.id },
       select: { voluntarioId: true },
+    }),
+    prisma.user.findMany({
+      where: { role: { in: ["ADMIN", "COORDINADOR"] }, active: true, estadoCuenta: "APROBADA" },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
     }),
   ]);
 
@@ -62,13 +68,15 @@ export default async function UsuariosPage() {
         Crea una cuenta para cada rescatista o entidad que necesite ingresar por su cuenta, sin
         depender de que tú les compartas tu propia sesión. Quienes se registren por su cuenta
         aparecerán abajo como solicitudes pendientes de aprobación. Marca la ⭐ de quienes prefieras
-        seguir de cerca para filtrar tu lista y el mapa del equipo a &ldquo;mi equipo&rdquo;.
+        seguir de cerca para filtrar tu lista y el mapa del equipo a &ldquo;mi equipo&rdquo;. Haz clic
+        en cualquier usuario para ver su ficha completa.
       </p>
       <UsuariosPanel
         usuariosIniciales={JSON.parse(JSON.stringify(usuarios))}
         usuarioActualId={session!.user.id}
         esAdmin={esAdministrador(session!.user.role)}
         seguidosIniciales={seguidos.map((s) => s.voluntarioId)}
+        coordinadores={coordinadores}
       />
     </div>
   );
