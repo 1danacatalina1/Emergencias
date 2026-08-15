@@ -33,6 +33,8 @@ const limiteFormularios = crearLimitador(8, "1 m", "formulario");
 const limiteLogin = crearLimitador(10, "5 m", "login");
 // Subida de archivos.
 const limiteSubidas = crearLimitador(20, "1 m", "upload");
+// Extracción de datos de capturas con IA (tiene costo por solicitud).
+const limiteExtraccionCaptura = crearLimitador(15, "1 m", "extraccion-captura");
 // API externa para integraciones (además del control por token de acceso).
 const limiteApiExterna = crearLimitador(60, "1 m", "external");
 
@@ -96,6 +98,9 @@ export async function limitarSiCorresponde(request: NextRequest): Promise<NextRe
   }
   if (pathname === "/api/upload" && request.method === "POST") {
     return aplicarLimite(limiteSubidas, ip, "Demasiadas subidas de archivos en poco tiempo. Espera un momento.");
+  }
+  if (pathname === "/api/aid-requests/extraer-captura" && request.method === "POST") {
+    return aplicarLimite(limiteExtraccionCaptura, ip, "Demasiadas capturas analizadas en poco tiempo. Espera un momento.");
   }
   if (pathname.startsWith("/api/external/")) {
     return aplicarLimite(limiteApiExterna, ip, "Límite de solicitudes excedido para esta integración.");
