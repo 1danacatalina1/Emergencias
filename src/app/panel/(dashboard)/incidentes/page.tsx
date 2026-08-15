@@ -33,6 +33,10 @@ export default async function IncidentesListaPage({
   return (
     <div>
       <h1 className="text-xl font-bold">Incidentes ({incidentes.length})</h1>
+      <p className="mt-1 text-sm text-muted">
+        Emergencias reportadas por la ciudadanía: estructuras colapsadas, personas atrapadas,
+        desaparecidas o fallecidas.
+      </p>
 
       <form className="mt-4 flex flex-col gap-2 sm:flex-row" method="get">
         <Campo name="q" defaultValue={q} placeholder="Buscar por código, descripción o municipio" className="sm:flex-1" />

@@ -33,7 +33,11 @@ export default async function PersonasPage({
 
   return (
     <div>
-      <h1 className="text-xl font-bold">Personas ({personas.length})</h1>
+      <h1 className="text-xl font-bold">Personas desaparecidas ({personas.length})</h1>
+      <p className="mt-1 text-sm text-muted">
+        Personas reportadas como desaparecidas por la ciudadanía. Actualiza el estado a medida que
+        avance la búsqueda.
+      </p>
       <form className="mt-4 flex flex-col gap-2 sm:flex-row" method="get">
         <Campo name="q" defaultValue={q} placeholder="Buscar por nombre o documento" className="sm:flex-1" />
         <Seleccion name="estadoPersona" defaultValue={estadoPersona ?? ""} className="sm:w-56">

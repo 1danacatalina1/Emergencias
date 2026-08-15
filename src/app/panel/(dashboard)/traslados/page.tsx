@@ -25,7 +25,10 @@ export default async function TrasladosPage({
 
   return (
     <div>
-      <h1 className="text-xl font-bold">Traslados ({traslados.length})</h1>
+      <h1 className="text-xl font-bold">Traslados a centros médicos ({traslados.length})</h1>
+      <p className="mt-1 text-sm text-muted">
+        Traslados de personas a centros médicos reportados por la ciudadanía o el equipo.
+      </p>
       <form className="mt-4 flex flex-col gap-2 sm:flex-row" method="get">
         <Seleccion name="estadoTraslado" defaultValue={estadoTraslado ?? ""} className="sm:flex-1">
           <option value="">Todos los estados</option>

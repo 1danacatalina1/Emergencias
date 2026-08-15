@@ -15,6 +15,9 @@ export default async function MascotasPanelPage() {
   return (
     <div>
       <h1 className="text-xl font-bold">Mascotas ({mascotas.length})</h1>
+      <p className="mt-1 text-sm text-muted">
+        Mascotas reportadas como perdidas o encontradas por la ciudadanía.
+      </p>
       <MascotasLista mascotas={JSON.parse(JSON.stringify(mascotas))} puedeEliminar={puedeEliminar(session?.user?.role)} />
     </div>
   );

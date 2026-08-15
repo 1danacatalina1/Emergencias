@@ -10,9 +10,9 @@ import BotonUbicacion from "@/components/ubicacion/BotonUbicacion";
 
 const REPORTES_CIUDADANIA = [
   { href: "/panel/incidentes", label: "Incidentes", icono: "🆘" },
-  { href: "/panel/personas", label: "Personas", icono: "🧍" },
-  { href: "/panel/traslados", label: "Traslados", icono: "🚑" },
-  { href: "/panel/ayudas", label: "Ayudas", icono: "🏠" },
+  { href: "/panel/personas", label: "Personas desaparecidas", icono: "🧍" },
+  { href: "/panel/traslados", label: "Traslados a centros médicos", icono: "🚑" },
+  { href: "/panel/ayudas", label: "Solicitudes de ayuda", icono: "🏠" },
   { href: "/panel/donaciones", label: "Donaciones", icono: "🎁" },
   { href: "/panel/mascotas", label: "Mascotas", icono: "🐾" },
 ];

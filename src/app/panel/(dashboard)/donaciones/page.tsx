@@ -46,6 +46,10 @@ export default async function DonacionesPage() {
   return (
     <div>
       <h1 className="text-xl font-bold">Donaciones y puntos de acopio</h1>
+      <p className="mt-1 text-sm text-muted">
+        Donaciones ofrecidas por la ciudadanía y los puntos de acopio donde se reciben, se
+        distribuyen y se controla el inventario.
+      </p>
 
       <div className="mt-6">
         <h2 className="font-bold">Puntos de acopio ({puntos.length})</h2>

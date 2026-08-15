@@ -25,7 +25,11 @@ export default async function AyudasPage({
 
   return (
     <div>
-      <h1 className="text-xl font-bold">Ayudas humanitarias ({ayudas.length})</h1>
+      <h1 className="text-xl font-bold">Solicitudes de ayuda ({ayudas.length})</h1>
+      <p className="mt-1 text-sm text-muted">
+        Solicitudes de ayuda humanitaria hechas por la ciudadanía: alimentos, agua, refugio,
+        medicamentos y otras necesidades.
+      </p>
       <form className="mt-4 flex flex-col gap-2 sm:flex-row" method="get">
         <Seleccion name="estado" defaultValue={estado ?? ""} className="sm:flex-1">
           <option value="">Todos los estados</option>
