@@ -7,6 +7,113 @@ import { CheckboxPrivacidad } from "@/components/AvisoPrivacidad";
 import SelectorUbicacion from "@/components/mapa/SelectorUbicacionDinamico";
 import { TIPOS_COLABORADOR, TIPOS_COLABORADOR_ORGANIZACION, TIPOS_VEHICULO } from "@/lib/catalogos";
 
+interface CamposVehiculoProps {
+  placa: string;
+  setPlaca: (v: string) => void;
+  tipo: string;
+  setTipo: (v: string) => void;
+  marcaModelo: string;
+  setMarcaModelo: (v: string) => void;
+  capacidadPersonas: string;
+  setCapacidadPersonas: (v: string) => void;
+  capacidadCarga: string;
+  setCapacidadCarga: (v: string) => void;
+  paraPersonas: boolean;
+  setParaPersonas: (v: boolean) => void;
+  paraInsumos: boolean;
+  setParaInsumos: (v: boolean) => void;
+  cubreRutaNacional: boolean;
+  setCubreRutaNacional: (v: boolean) => void;
+  cubreRutaUrbana: boolean;
+  setCubreRutaUrbana: (v: boolean) => void;
+  rutasCubiertas: string;
+  setRutasCubiertas: (v: string) => void;
+  cedula: string;
+  setCedula: (v: string) => void;
+  errorVehiculo?: string;
+}
+
+function CamposVehiculo({
+  placa, setPlaca, tipo, setTipo, marcaModelo, setMarcaModelo,
+  capacidadPersonas, setCapacidadPersonas, capacidadCarga, setCapacidadCarga,
+  paraPersonas, setParaPersonas, paraInsumos, setParaInsumos,
+  cubreRutaNacional, setCubreRutaNacional, cubreRutaUrbana, setCubreRutaUrbana,
+  rutasCubiertas, setRutasCubiertas, cedula, setCedula, errorVehiculo,
+}: CamposVehiculoProps) {
+  return (
+    <div className="flex flex-col gap-3">
+      {errorVehiculo && <ErrorCampo mensaje={errorVehiculo} />}
+      <div>
+        <Etiqueta htmlFor="vehiculoPlaca">Placa *</Etiqueta>
+        <Campo id="vehiculoPlaca" value={placa} onChange={(e) => setPlaca(e.target.value.toUpperCase())} required />
+      </div>
+      <div>
+        <Etiqueta htmlFor="vehiculoTipo">Tipo de vehículo *</Etiqueta>
+        <Seleccion id="vehiculoTipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
+          {TIPOS_VEHICULO.map((t) => (
+            <option key={t.value} value={t.value}>{t.icono} {t.label}</option>
+          ))}
+        </Seleccion>
+      </div>
+      <div>
+        <Etiqueta htmlFor="vehiculoMarcaModelo">Marca / modelo (opcional)</Etiqueta>
+        <Campo id="vehiculoMarcaModelo" value={marcaModelo} onChange={(e) => setMarcaModelo(e.target.value)} placeholder="Ej. Toyota Hilux 2018" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Etiqueta htmlFor="vehiculoCapacidadPersonas">Capacidad (personas)</Etiqueta>
+          <Campo id="vehiculoCapacidadPersonas" type="number" min={0} value={capacidadPersonas} onChange={(e) => setCapacidadPersonas(e.target.value)} />
+        </div>
+        <div>
+          <Etiqueta htmlFor="vehiculoCapacidadCarga">Capacidad de carga</Etiqueta>
+          <Campo id="vehiculoCapacidadCarga" value={capacidadCarga} onChange={(e) => setCapacidadCarga(e.target.value)} placeholder="Ej. 500 kg" />
+        </div>
+      </div>
+
+      <p className="text-sm font-semibold">¿Para qué se puede usar?</p>
+      <div className="flex flex-col gap-2">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={paraPersonas} onChange={(e) => setParaPersonas(e.target.checked)} />
+          Movilizar personal / voluntarios entre ciudades
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={paraInsumos} onChange={(e) => setParaInsumos(e.target.checked)} />
+          Llevar insumos a puntos de acopio
+        </label>
+      </div>
+
+      <p className="text-sm font-semibold">¿Qué tipo de ruta puede cubrir?</p>
+      <div className="flex flex-col gap-2">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={cubreRutaNacional} onChange={(e) => setCubreRutaNacional(e.target.checked)} />
+          Nacional (de ciudad a ciudad)
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={cubreRutaUrbana} onChange={(e) => setCubreRutaUrbana(e.target.checked)} />
+          Urbana (interna en una ciudad)
+        </label>
+      </div>
+      <div>
+        <Etiqueta htmlFor="vehiculoRutasCubiertas">Rutas específicas (opcional)</Etiqueta>
+        <Campo
+          id="vehiculoRutasCubiertas"
+          value={rutasCubiertas}
+          onChange={(e) => setRutasCubiertas(e.target.value)}
+          placeholder="Ej. Bogotá - Cali, o dentro de Bogotá"
+        />
+      </div>
+
+      <div>
+        <Etiqueta htmlFor="vehiculoCedula">Tu número de cédula *</Etiqueta>
+        <p className="mb-1 text-xs text-muted">
+          Se usa para tramitar las cartas de permiso de ingreso a zonas afectadas cuando conduces este vehículo.
+        </p>
+        <Campo id="vehiculoCedula" value={cedula} onChange={(e) => setCedula(e.target.value)} required />
+      </div>
+    </div>
+  );
+}
+
 export default function FormularioRegistro() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -43,6 +150,7 @@ export default function FormularioRegistro() {
   const [vehiculoCedula, setVehiculoCedula] = useState("");
 
   const esOrganizacion = TIPOS_COLABORADOR_ORGANIZACION.includes(tipoColaborador);
+  const esVehiculoRol = tipoColaborador === "VEHICULO_DISPONIBLE";
 
   const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -74,12 +182,12 @@ export default function FormularioRegistro() {
           lugarAccionDepartamento: lugarDepartamento,
           lugarAccionLat: lat,
           lugarAccionLng: lng,
-          disponibilidadTiempo: esOrganizacion ? undefined : disponibilidadTiempo || undefined,
-          disponibilidadDesplazamiento: esOrganizacion ? undefined : disponibilidadDesplazamiento,
-          zonasDesplazamiento: esOrganizacion ? undefined : zonasDesplazamiento || undefined,
-          experticia: esOrganizacion ? undefined : experticia || undefined,
-          comoPuedeAyudar: esOrganizacion ? undefined : comoPuedeAyudar || undefined,
-          vehiculo: tieneVehiculo
+          disponibilidadTiempo: (esOrganizacion || esVehiculoRol) ? undefined : disponibilidadTiempo || undefined,
+          disponibilidadDesplazamiento: (esOrganizacion || esVehiculoRol) ? undefined : disponibilidadDesplazamiento,
+          zonasDesplazamiento: (esOrganizacion || esVehiculoRol) ? undefined : zonasDesplazamiento || undefined,
+          experticia: (esOrganizacion || esVehiculoRol) ? undefined : experticia || undefined,
+          comoPuedeAyudar: (esOrganizacion || esVehiculoRol) ? undefined : comoPuedeAyudar || undefined,
+          vehiculo: (esVehiculoRol || tieneVehiculo)
             ? {
                 placa: vehiculoPlaca,
                 tipo: vehiculoTipo,
@@ -229,7 +337,31 @@ export default function FormularioRegistro() {
           </div>
         </div>
 
-        {!esOrganizacion && (
+        {esVehiculoRol && (
+          <div>
+            <h3 className="mb-3 font-bold">Datos del vehículo</h3>
+            <p className="mb-2 text-xs text-muted">
+              Registra tu vehículo para que el equipo sepa que está disponible para movilizar
+              personal o insumos.
+            </p>
+            <CamposVehiculo
+              placa={vehiculoPlaca} setPlaca={setVehiculoPlaca}
+              tipo={vehiculoTipo} setTipo={setVehiculoTipo}
+              marcaModelo={vehiculoMarcaModelo} setMarcaModelo={setVehiculoMarcaModelo}
+              capacidadPersonas={vehiculoCapacidadPersonas} setCapacidadPersonas={setVehiculoCapacidadPersonas}
+              capacidadCarga={vehiculoCapacidadCarga} setCapacidadCarga={setVehiculoCapacidadCarga}
+              paraPersonas={vehiculoParaPersonas} setParaPersonas={setVehiculoParaPersonas}
+              paraInsumos={vehiculoParaInsumos} setParaInsumos={setVehiculoParaInsumos}
+              cubreRutaNacional={vehiculoCubreRutaNacional} setCubreRutaNacional={setVehiculoCubreRutaNacional}
+              cubreRutaUrbana={vehiculoCubreRutaUrbana} setCubreRutaUrbana={setVehiculoCubreRutaUrbana}
+              rutasCubiertas={vehiculoRutasCubiertas} setRutasCubiertas={setVehiculoRutasCubiertas}
+              cedula={vehiculoCedula} setCedula={setVehiculoCedula}
+              errorVehiculo={errores.vehiculo}
+            />
+          </div>
+        )}
+
+        {!esOrganizacion && !esVehiculoRol && (
           <div>
             <h3 className="mb-3 font-bold">Disponibilidad y experticia</h3>
             <p className="mb-2 text-xs text-muted">
@@ -291,91 +423,39 @@ export default function FormularioRegistro() {
           </div>
         )}
 
-        <div>
-          <h3 className="mb-3 font-bold">Vehículo</h3>
-          <label className="flex items-center gap-2 text-sm font-medium">
-            <input
-              type="checkbox"
-              checked={tieneVehiculo}
-              onChange={(e) => setTieneVehiculo(e.target.checked)}
-              className="h-5 w-5 rounded border-border"
-            />
-            🚗 Tengo un vehículo disponible para apoyar
-          </label>
+        {!esVehiculoRol && (
+          <div>
+            <h3 className="mb-3 font-bold">Vehículo</h3>
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={tieneVehiculo}
+                onChange={(e) => setTieneVehiculo(e.target.checked)}
+                className="h-5 w-5 rounded border-border"
+              />
+              🚗 Tengo un vehículo disponible para apoyar
+            </label>
 
-          {tieneVehiculo && (
-            <div className="mt-3 flex flex-col gap-3 rounded-xl border border-border p-3">
-              {errores.vehiculo && <ErrorCampo mensaje={errores.vehiculo} />}
-              <div>
-                <Etiqueta htmlFor="vehiculoPlaca">Placa *</Etiqueta>
-                <Campo id="vehiculoPlaca" value={vehiculoPlaca} onChange={(e) => setVehiculoPlaca(e.target.value.toUpperCase())} required={tieneVehiculo} />
-              </div>
-              <div>
-                <Etiqueta htmlFor="vehiculoTipo">Tipo de vehículo *</Etiqueta>
-                <Seleccion id="vehiculoTipo" value={vehiculoTipo} onChange={(e) => setVehiculoTipo(e.target.value)}>
-                  {TIPOS_VEHICULO.map((t) => (
-                    <option key={t.value} value={t.value}>{t.icono} {t.label}</option>
-                  ))}
-                </Seleccion>
-              </div>
-              <div>
-                <Etiqueta htmlFor="vehiculoMarcaModelo">Marca / modelo (opcional)</Etiqueta>
-                <Campo id="vehiculoMarcaModelo" value={vehiculoMarcaModelo} onChange={(e) => setVehiculoMarcaModelo(e.target.value)} placeholder="Ej. Toyota Hilux 2018" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Etiqueta htmlFor="vehiculoCapacidadPersonas">Capacidad (personas)</Etiqueta>
-                  <Campo id="vehiculoCapacidadPersonas" type="number" min={0} value={vehiculoCapacidadPersonas} onChange={(e) => setVehiculoCapacidadPersonas(e.target.value)} />
-                </div>
-                <div>
-                  <Etiqueta htmlFor="vehiculoCapacidadCarga">Capacidad de carga</Etiqueta>
-                  <Campo id="vehiculoCapacidadCarga" value={vehiculoCapacidadCarga} onChange={(e) => setVehiculoCapacidadCarga(e.target.value)} placeholder="Ej. 500 kg" />
-                </div>
-              </div>
-
-              <p className="text-sm font-semibold">¿Para qué se puede usar?</p>
-              <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={vehiculoParaPersonas} onChange={(e) => setVehiculoParaPersonas(e.target.checked)} />
-                  Movilizar personal / voluntarios entre ciudades
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={vehiculoParaInsumos} onChange={(e) => setVehiculoParaInsumos(e.target.checked)} />
-                  Llevar insumos a puntos de acopio
-                </label>
-              </div>
-
-              <p className="text-sm font-semibold">¿Qué tipo de ruta puede cubrir?</p>
-              <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={vehiculoCubreRutaNacional} onChange={(e) => setVehiculoCubreRutaNacional(e.target.checked)} />
-                  Nacional (de ciudad a ciudad)
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={vehiculoCubreRutaUrbana} onChange={(e) => setVehiculoCubreRutaUrbana(e.target.checked)} />
-                  Urbana (interna en una ciudad)
-                </label>
-              </div>
-              <div>
-                <Etiqueta htmlFor="vehiculoRutasCubiertas">Rutas específicas (opcional)</Etiqueta>
-                <Campo
-                  id="vehiculoRutasCubiertas"
-                  value={vehiculoRutasCubiertas}
-                  onChange={(e) => setVehiculoRutasCubiertas(e.target.value)}
-                  placeholder="Ej. Bogotá - Cali, o dentro de Bogotá"
+            {tieneVehiculo && (
+              <div className="mt-3 rounded-xl border border-border p-3">
+                <CamposVehiculo
+                  placa={vehiculoPlaca} setPlaca={setVehiculoPlaca}
+                  tipo={vehiculoTipo} setTipo={setVehiculoTipo}
+                  marcaModelo={vehiculoMarcaModelo} setMarcaModelo={setVehiculoMarcaModelo}
+                  capacidadPersonas={vehiculoCapacidadPersonas} setCapacidadPersonas={setVehiculoCapacidadPersonas}
+                  capacidadCarga={vehiculoCapacidadCarga} setCapacidadCarga={setVehiculoCapacidadCarga}
+                  paraPersonas={vehiculoParaPersonas} setParaPersonas={setVehiculoParaPersonas}
+                  paraInsumos={vehiculoParaInsumos} setParaInsumos={setVehiculoParaInsumos}
+                  cubreRutaNacional={vehiculoCubreRutaNacional} setCubreRutaNacional={setVehiculoCubreRutaNacional}
+                  cubreRutaUrbana={vehiculoCubreRutaUrbana} setCubreRutaUrbana={setVehiculoCubreRutaUrbana}
+                  rutasCubiertas={vehiculoRutasCubiertas} setRutasCubiertas={setVehiculoRutasCubiertas}
+                  cedula={vehiculoCedula} setCedula={setVehiculoCedula}
+                  errorVehiculo={errores.vehiculo}
                 />
               </div>
-
-              <div>
-                <Etiqueta htmlFor="vehiculoCedula">Tu número de cédula *</Etiqueta>
-                <p className="mb-1 text-xs text-muted">
-                  Se usa para tramitar las cartas de permiso de ingreso a zonas afectadas cuando conduces este vehículo.
-                </p>
-                <Campo id="vehiculoCedula" value={vehiculoCedula} onChange={(e) => setVehiculoCedula(e.target.value)} required={tieneVehiculo} />
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         <CheckboxPrivacidad checked={aceptaPrivacidad} onChange={setAceptaPrivacidad} />
 

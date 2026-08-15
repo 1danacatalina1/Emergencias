@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "TipoColaborador" ADD VALUE 'VEHICULO_DISPONIBLE';

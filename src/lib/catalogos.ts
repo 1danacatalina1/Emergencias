@@ -38,6 +38,7 @@ export const TIPOS_COLABORADOR = [
   { value: "RESCATISTA", label: "Rescatista" },
   { value: "VOLUNTARIO", label: "Voluntario" },
   { value: "COORDINADOR_VOLUNTARIOS", label: "Coordinador de voluntarios" },
+  { value: "VEHICULO_DISPONIBLE", label: "Vehículo disponible" },
   { value: "PROFESIONAL_SALUD", label: "Profesional de la salud" },
   { value: "PROFESIONAL_VETERINARIA", label: "Profesional en veterinaria" },
   { value: "PROFESIONAL_INGENIERIA_ARQUITECTURA", label: "Profesional en ingeniería / arquitectura" },

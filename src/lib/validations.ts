@@ -290,6 +290,7 @@ export const tipoColaboradorEnum = z.enum([
   "RESCATISTA",
   "VOLUNTARIO",
   "COORDINADOR_VOLUNTARIOS",
+  "VEHICULO_DISPONIBLE",
   "CENTRO_ACOPIO",
   "ENTIDAD",
   "PROFESIONAL_SALUD",
@@ -332,6 +333,9 @@ export const userSelfRegisterSchema = z.object({
   experticia: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
   comoPuedeAyudar: z.string().max(TEXTO_LARGO_MAX).optional().nullable(),
   vehiculo: userSelfRegisterVehiculoSchema.optional().nullable(),
+}).refine((data) => data.tipoColaborador !== "VEHICULO_DISPONIBLE" || data.vehiculo != null, {
+  message: "Indica los datos de tu vehículo",
+  path: ["vehiculo"],
 });
 
 export const userAprobarSchema = z.object({
