@@ -60,21 +60,21 @@ export default async function PanelInicioPage() {
   ]);
 
   const kpisReportes = [
-    { label: "Incidentes activos", valor: incidentesAbiertos, de: totalIncidentes, color: "text-primary" },
-    { label: "Críticos sin resolver", valor: incidentesCriticos, color: "text-emergency" },
-    { label: "Personas desaparecidas", valor: personasDesaparecidas, de: totalPersonas, color: "text-orange-600" },
-    { label: "Personas fallecidas", valor: personasFallecidas, color: "text-slate-800" },
-    { label: "Traslados en ruta", valor: trasladosEnRuta, de: totalTraslados, color: "text-warning" },
-    { label: "Ayudas pendientes", valor: ayudasPendientes, de: totalAyudas, color: "text-primary" },
-    { label: "Puntos de acopio activos", valor: puntosAcopioActivos, color: "text-success" },
-    { label: "Donaciones por gestionar", valor: donacionesOfrecidas, color: "text-success" },
-    { label: "Mascotas activas", valor: mascotasActivas, color: "text-teal-700" },
+    { label: "Incidentes activos", valor: incidentesAbiertos, de: totalIncidentes, color: "text-primary", href: "/panel/incidentes" },
+    { label: "Críticos sin resolver", valor: incidentesCriticos, color: "text-emergency", href: "/panel/incidentes" },
+    { label: "Personas desaparecidas", valor: personasDesaparecidas, de: totalPersonas, color: "text-orange-600", href: "/panel/personas" },
+    { label: "Personas fallecidas", valor: personasFallecidas, color: "text-slate-800", href: "/panel/personas?estadoPersona=FALLECIDA" },
+    { label: "Traslados en ruta", valor: trasladosEnRuta, de: totalTraslados, color: "text-warning", href: "/panel/traslados?estadoTraslado=EN_RUTA" },
+    { label: "Ayudas pendientes", valor: ayudasPendientes, de: totalAyudas, color: "text-primary", href: "/panel/ayudas" },
+    { label: "Puntos de acopio activos", valor: puntosAcopioActivos, color: "text-success", href: "/panel/donaciones" },
+    { label: "Donaciones por gestionar", valor: donacionesOfrecidas, color: "text-success", href: "/panel/donaciones" },
+    { label: "Mascotas activas", valor: mascotasActivas, color: "text-teal-700", href: "/panel/mascotas" },
   ];
 
   const kpisEquipo = [
-    { label: "Coordinadores", valor: totalCoordinadores, color: "text-indigo-700" },
-    { label: "Voluntarios", valor: totalVoluntarios, color: "text-primary" },
-    { label: "Profesionales", valor: totalProfesionales, color: "text-violet-700" },
+    { label: "Coordinadores", valor: totalCoordinadores, color: "text-indigo-700", href: "/panel/profesionales" },
+    { label: "Voluntarios", valor: totalVoluntarios, color: "text-primary", href: "/panel/profesionales" },
+    { label: "Profesionales", valor: totalProfesionales, color: "text-violet-700", href: "/panel/profesionales" },
   ];
 
   return (
@@ -93,23 +93,27 @@ export default async function PanelInicioPage() {
       <p className="mt-1 px-1 text-[11px] font-bold uppercase tracking-wide text-muted">Reportes de la ciudadanía</p>
       <div className="mt-1.5 grid grid-cols-3 gap-2">
         {kpisReportes.map((k) => (
-          <Tarjeta key={k.label} className="p-2">
-            <p className={`text-base font-extrabold leading-tight ${k.color}`}>
-              {k.valor}
-              {k.de !== undefined && <span className="text-[11px] font-medium text-muted"> / {k.de}</span>}
-            </p>
-            <p className="mt-0.5 text-[10px] font-medium leading-tight text-muted">{k.label}</p>
-          </Tarjeta>
+          <Link key={k.label} href={k.href}>
+            <Tarjeta className="p-2 transition hover:border-primary/40 active:scale-[0.97]">
+              <p className={`text-base font-extrabold leading-tight ${k.color}`}>
+                {k.valor}
+                {k.de !== undefined && <span className="text-[11px] font-medium text-muted"> / {k.de}</span>}
+              </p>
+              <p className="mt-0.5 text-[10px] font-medium leading-tight text-muted">{k.label}</p>
+            </Tarjeta>
+          </Link>
         ))}
       </div>
 
       <p className="mt-3 px-1 text-[11px] font-bold uppercase tracking-wide text-muted">Equipo de voluntarios</p>
       <div className="mt-1.5 grid grid-cols-3 gap-2">
         {kpisEquipo.map((k) => (
-          <Tarjeta key={k.label} className="p-2">
-            <p className={`text-base font-extrabold leading-tight ${k.color}`}>{k.valor}</p>
-            <p className="mt-0.5 text-[10px] font-medium leading-tight text-muted">{k.label}</p>
-          </Tarjeta>
+          <Link key={k.label} href={k.href}>
+            <Tarjeta className="p-2 transition hover:border-primary/40 active:scale-[0.97]">
+              <p className={`text-base font-extrabold leading-tight ${k.color}`}>{k.valor}</p>
+              <p className="mt-0.5 text-[10px] font-medium leading-tight text-muted">{k.label}</p>
+            </Tarjeta>
+          </Link>
         ))}
       </div>
 
