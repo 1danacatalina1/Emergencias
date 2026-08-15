@@ -31,7 +31,7 @@ const EQUIPO_SEGURIDAD = { href: "/panel/seguridad", label: "Seguridad", icono: 
 const ETIQUETAS_ROL: Record<string, string> = {
   ADMIN: "Administrador",
   COORDINADOR: "Coordinador",
-  OPERADOR: "Operador",
+  OPERADOR: "Voluntario",
   CONSULTA: "Consulta",
 };
 

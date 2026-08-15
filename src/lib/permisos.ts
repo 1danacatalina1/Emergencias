@@ -1,7 +1,7 @@
 /**
  * Modelo de permisos por rol (RBAC), alineado a los perfiles requeridos por
  * la UNGRD: Ciudadano (sin sesión, solo puede crear reportes públicos),
- * Operador (gestiona reportes), Administrador/Coordinador (control total).
+ * Voluntario (gestiona reportes), Administrador/Coordinador (control total).
  */
 
 export type Rol = "ADMIN" | "COORDINADOR" | "OPERADOR" | "CONSULTA";

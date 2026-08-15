@@ -6,7 +6,7 @@ import { formatearFechaHora } from "@/lib/fecha";
 import { TIPOS_COLABORADOR } from "@/lib/catalogos";
 
 const ROLES = [
-  { value: "OPERADOR", label: "Operador (rescatista) — crea y gestiona reportes" },
+  { value: "OPERADOR", label: "Voluntario (rescatista) — crea y gestiona reportes" },
   { value: "COORDINADOR", label: "Coordinador — además elimina, exporta y ve auditoría" },
   { value: "CONSULTA", label: "Consulta — solo puede ver, sin editar" },
   { value: "ADMIN", label: "Administrador — control total, incluida esta sección" },
@@ -19,7 +19,7 @@ function etiquetaColaborador(tipo: string | null) {
 const ETIQUETAS_ROL: Record<string, string> = {
   ADMIN: "Administrador",
   COORDINADOR: "Coordinador",
-  OPERADOR: "Operador",
+  OPERADOR: "Voluntario",
   CONSULTA: "Consulta",
 };
 
@@ -473,7 +473,7 @@ export default function UsuariosPanel({
                         className="w-auto py-1.5 text-xs"
                       >
                         {rolesDisponibles.map((r) => (
-                          <option key={r.value} value={r.value}>{r.value}</option>
+                          <option key={r.value} value={r.value}>{ETIQUETAS_ROL[r.value] ?? r.value}</option>
                         ))}
                       </Seleccion>
                       <label className="flex items-center gap-1.5 text-xs font-medium text-foreground">

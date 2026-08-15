@@ -15,7 +15,7 @@ function etiquetaColaborador(tipo: string | null) {
 const ETIQUETAS_ROL: Record<string, string> = {
   ADMIN: "Administrador",
   COORDINADOR: "Coordinador",
-  OPERADOR: "Operador",
+  OPERADOR: "Voluntario",
   CONSULTA: "Consulta",
 };
 
